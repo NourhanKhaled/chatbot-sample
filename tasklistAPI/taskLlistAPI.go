@@ -104,21 +104,46 @@ func saveToken(file string, token *oauth2.Token) {
   json.NewEncoder(f).Encode(token)
 }
 
-func CreateTask(client *http.Client){
+func CreateTask(w http.ResponseWriter, r *http.Request) {
 
-  // taskapi, err := tasks.New(client)
-	// if err != nil {
-	// 	log.Fatalf("Unable to create Tasks service: %v", err)
-	// }
-  //
-	// task, err := taskapi.Tasks.Insert("@default", &tasks.Task{
-	// 	Title: "finish this API code generator thing",
-	// 	Notes: "ummmm",
-	// 	Due:   "2011-10-15T12:00:00.000Z",
-	// }).Do()
-	// fmt.Printf("Got task, err: %#v, %v", task, err)
+  taskapi, err := tasks.New(client)
+	if err != nil {
+		log.Fatalf("Unable to create Tasks service: %v", err)
+	}
+
+  tasklistId,err := GetTaskList()
+  if err != nil {
+		log.Fatalf("Unable to get tasklist: %v", err)
+	}
+
+  data := JSON{}
+  if err := json.NewDecoder(r.Body).Decode(&data); err != nil {
+    http.Error(w, fmt.Sprintf("Couldn't decode JSON: %v.", err), http.StatusBadRequest)
+    return
+  }
+  defer r.Body.Close()
+
+  // Make sure a message key is defined in the body of the request
+  title, titleFound := data["title"]
+  if !titleFound {
+    http.Error(w, "Missing token key in body.", http.StatusBadRequest)
+    return
+  }
+
+  due, dueFound := data["due"]
+  if !dueFound {
+    http.Error(w, "Missing token key in body.", http.StatusBadRequest)
+    return
+  }
+
+	task, err := taskapi.Tasks.Insert(tasklistId, &tasks.Task{
+		Title: title.(string),
+		Notes: data["notes"].(string),
+		Due:   due.(string),
+	}).Do()
+	fmt.Printf("Got task, err: %#v, %v", task, err)
+
 }
-
 
 func PostCode(w http.ResponseWriter, r *http.Request) {
   ctx := context.Background()
@@ -265,18 +290,6 @@ func Main() {
   //
 
   // // CreateTask(client)
-  // taskapi, err := tasks.New(client)
-	// if err != nil {
-	// 	log.Fatalf("Unable to create Tasks service: %v", err)
-	// }
-  //
-  // tasklistId := r.Items[0].Id
-	// task, err := taskapi.Tasks.Insert(tasklistId, &tasks.Task{
-	// 	Title: "finish this API code generator thing",
-	// 	Notes: "ummmm tala3to 3einy",
-	// 	Due:   "2011-10-15T12:00:00.000Z",
-	// }).Do()
-	// fmt.Printf("Got task, err: %#v, %v", task, err)
-  //
+
 
 }

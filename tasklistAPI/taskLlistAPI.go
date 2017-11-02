@@ -15,6 +15,7 @@ import (
   "golang.org/x/oauth2"
   "golang.org/x/oauth2/google"
   "google.golang.org/api/tasks/v1"
+
 )
 
 type (
@@ -179,7 +180,13 @@ func PostCode(w http.ResponseWriter, r *http.Request) {
   }
 }
 
-func GetTasks(w http.ResponseWriter, r *http.Request){
+// writeJSON Writes the JSON equivilant for data into ResponseWriter w
+func writeJSON(w http.ResponseWriter, data JSON) {
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(data)
+}
+
+func GetTasks(w http.ResponseWriter, r *http.Request) {
   if r.Method == http.MethodGet {
     tasklistId, err := GetTaskList()
     fmt.Println(tasklistId)
@@ -188,12 +195,39 @@ func GetTasks(w http.ResponseWriter, r *http.Request){
       return
     }
 
-    fmt.Fprintln(w, "hi")
+    srv, err := tasks.New(client)
 
- }
+    tasks, err := srv.Tasks.List(tasklistId).Do()
+    if err != nil {
+      log.Fatalf("Unable to retrieve tasks %v!", err)
+    }
+    fmt.Println("Type")
+    // fmt.Println(reflect.TypeOf(tasks))
+    // writeJSON(w, tasks)
+    if len(tasks.Items) > 0 {
+      x := len(tasks.Items)
+      arr := make([]JSON,x)
+      for c, i := range tasks.Items {
+        arr[c] = JSON {
+          "index": c,
+          "title": i.Title,
+          "updated": i.Updated,
+          "notes": i.Notes,
+          "status": i.Status,
+          "due": i.Due,
+          "completed": i.Completed,
+      	}
+      }
+      writeJSON(w,JSON{
+        "tasks": arr,
+      })
+    } else {
+      fmt.Fprintln(w, "no tasks")
+    }
+  }
 }
-func GetTaskList() (string,error) {
 
+func GetTaskList() (string,error) {
   srv, err := tasks.New(client)
 
   if err != nil {
@@ -207,13 +241,6 @@ func GetTaskList() (string,error) {
 
   fmt.Println("Task Lists:")
   if len(r.Items) > 0 {
-    tasks, err := srv.Tasks.List(r.Items[0].Id).Do()
-    if err != nil {
-      return "", fmt.Errorf("Unable to retrieve tasks %v!", err)
-    }
-
-    fmt.Println(tasks.Items[0].Id)
-
     return r.Items[0].Id, nil
   } else {
     return "", fmt.Errorf("Task list not found")

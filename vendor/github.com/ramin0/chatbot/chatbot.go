@@ -11,7 +11,7 @@ import (
 	"strconv"
 	"strings"
 	"time"
-	"github.com/ramin0/chatbot-sample/tasklistAPI"
+	"github.com/NourhanKhaled/chatbot-sample/tasklistAPI"
 	cors "github.com/heppu/simple-cors"
 )
 
@@ -161,7 +161,7 @@ func handleChat(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Write a JSON containg the processed response
-	writeJSON(w, JSON{
+	writeJSON(w, JSON {
 		"message": message,
 	})
 }

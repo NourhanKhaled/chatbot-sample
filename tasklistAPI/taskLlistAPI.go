@@ -91,34 +91,17 @@ func saveToken(file string, token *oauth2.Token) {
 
 func CreateTask(client *http.Client){
 
-  // r, err := srv.Tasklists.List().MaxResults(1).Do()
-  // if err != nil {
-  //   log.Fatalf("Unable to retrieve task lists.", err)
-  // }
+  // taskapi, err := tasks.New(client)
+	// if err != nil {
+	// 	log.Fatalf("Unable to create Tasks service: %v", err)
+	// }
   //
-  // task = &r.Task{
-  //   Title: "Title",
-  //   Notes: "Notes",
-  //   Due: "2015-05-28T09:00:00-07:00",
-  // }
-  // event, err = srv.Tasks.Insert(r.Id , task).Do()
-  // if err != nil {
-  // log.Fatalf("Unable to create task. %v\n", err)
-  // }
-  //
-  // fmt.Println(result.Title());
-
-  taskapi, err := tasks.New(client)
-	if err != nil {
-		log.Fatalf("Unable to create Tasks service: %v", err)
-	}
-
-	task, err := taskapi.Tasks.Insert("@default", &tasks.Task{
-		Title: "finish this API code generator thing",
-		Notes: "ummmm",
-		Due:   "2011-10-15T12:00:00.000Z",
-	}).Do()
-	fmt.Printf("Got task, err: %#v, %v", task, err)
+	// task, err := taskapi.Tasks.Insert("@default", &tasks.Task{
+	// 	Title: "finish this API code generator thing",
+	// 	Notes: "ummmm",
+	// 	Due:   "2011-10-15T12:00:00.000Z",
+	// }).Do()
+	// fmt.Printf("Got task, err: %#v, %v", task, err)
 
 }
 func Main() {
@@ -131,7 +114,7 @@ func Main() {
 
   // If modifying these scopes, delete your previously saved credentials
   // at ~/.credentials/tasks-go-quickstart.json
-  config, err := google.ConfigFromJSON(b, tasks.TasksReadonlyScope)
+  config, err := google.ConfigFromJSON(b, tasks.TasksScope)
   if err != nil {
     log.Fatalf("Unable to parse client secret file to config: %v", err)
   }
@@ -154,9 +137,22 @@ func Main() {
     }
   } else {
     fmt.Print("No task lists found.")
+    return
   }
 
-  CreateTask(client)
+  // CreateTask(client)
+  taskapi, err := tasks.New(client)
+	if err != nil {
+		log.Fatalf("Unable to create Tasks service: %v", err)
+	}
+
+  tasklistId := r.Items[0].Id
+	task, err := taskapi.Tasks.Insert(tasklistId, &tasks.Task{
+		Title: "finish this API code generator thing",
+		Notes: "ummmm tala3to 3einy",
+		Due:   "2011-10-15T12:00:00.000Z",
+	}).Do()
+	fmt.Printf("Got task, err: %#v, %v", task, err)
 
 
 }

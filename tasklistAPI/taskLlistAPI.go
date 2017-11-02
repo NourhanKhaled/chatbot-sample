@@ -10,6 +10,7 @@ import (
   "os"
   "os/user"
   "path/filepath"
+  "time"
 
   "golang.org/x/net/context"
   "golang.org/x/oauth2"
@@ -137,17 +138,18 @@ func CreateTask(w http.ResponseWriter, r *http.Request) {
       return
     }
 
-    // date, err := time.Parse("06/1/2006 04:05", due.(string))
-    // fmt.Println(date)
-    // if err != nil {
-    //   http.Error(w, "wrong date format", http.StatusBadRequest)
-    //   return
-    // }
+    date, err := time.Parse("06/1/2006 15:04", due.(string))
+    fmt.Println(date)
+    if err != nil {
+      http.Error(w, "wrong date format", http.StatusBadRequest)
+      return
+    }
 
+    newformat := date.Format("2006-01-02T15:04:05Z")
   	task, err := taskapi.Tasks.Insert(tasklistId, &tasks.Task{
   		Title: title.(string),
   		Notes: data["notes"].(string),
-  		Due:   due.(string),
+  		Due:   newformat,
   	}).Do()
   	fmt.Printf("Got task, err: %#v, %v", task, err)
   }else{

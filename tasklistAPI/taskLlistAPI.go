@@ -106,43 +106,53 @@ func saveToken(file string, token *oauth2.Token) {
 
 func CreateTask(w http.ResponseWriter, r *http.Request) {
 
-  taskapi, err := tasks.New(client)
-	if err != nil {
-		log.Fatalf("Unable to create Tasks service: %v", err)
-	}
+  if r.Method == http.MethodPost {
+    taskapi, err := tasks.New(client)
+  	if err != nil {
+  		log.Fatalf("Unable to create Tasks service: %v", err)
+  	}
 
-  tasklistId,err := GetTaskList()
-  if err != nil {
-		log.Fatalf("Unable to get tasklist: %v", err)
-	}
+    tasklistId,err := GetTaskList()
+    if err != nil {
+  		log.Fatalf("Unable to get tasklist: %v", err)
+  	}
 
-  data := JSON{}
-  if err := json.NewDecoder(r.Body).Decode(&data); err != nil {
-    http.Error(w, fmt.Sprintf("Couldn't decode JSON: %v.", err), http.StatusBadRequest)
-    return
+    data := JSON{}
+    if err := json.NewDecoder(r.Body).Decode(&data); err != nil {
+      http.Error(w, fmt.Sprintf("Couldn't decode JSON: %v.", err), http.StatusBadRequest)
+      return
+    }
+    defer r.Body.Close()
+
+    // Make sure a message key is defined in the body of the request
+    title, titleFound := data["title"]
+    if !titleFound {
+      http.Error(w, "Missing token key in body.", http.StatusBadRequest)
+      return
+    }
+
+    due, dueFound := data["due"]
+    if !dueFound {
+      http.Error(w, "Missing token key in body.", http.StatusBadRequest)
+      return
+    }
+
+    // date, err := time.Parse("06/1/2006 04:05", due.(string))
+    // fmt.Println(date)
+    // if err != nil {
+    //   http.Error(w, "wrong date format", http.StatusBadRequest)
+    //   return
+    // }
+
+  	task, err := taskapi.Tasks.Insert(tasklistId, &tasks.Task{
+  		Title: title.(string),
+  		Notes: data["notes"].(string),
+  		Due:   due.(string),
+  	}).Do()
+  	fmt.Printf("Got task, err: %#v, %v", task, err)
+  }else{
+    http.Error(w, "Only POST requests are allowed.", http.StatusMethodNotAllowed)
   }
-  defer r.Body.Close()
-
-  // Make sure a message key is defined in the body of the request
-  title, titleFound := data["title"]
-  if !titleFound {
-    http.Error(w, "Missing token key in body.", http.StatusBadRequest)
-    return
-  }
-
-  due, dueFound := data["due"]
-  if !dueFound {
-    http.Error(w, "Missing token key in body.", http.StatusBadRequest)
-    return
-  }
-
-	task, err := taskapi.Tasks.Insert(tasklistId, &tasks.Task{
-		Title: title.(string),
-		Notes: data["notes"].(string),
-		Due:   due.(string),
-	}).Do()
-	fmt.Printf("Got task, err: %#v, %v", task, err)
-
 }
 
 func PostCode(w http.ResponseWriter, r *http.Request) {
@@ -197,11 +207,6 @@ func PostCode(w http.ResponseWriter, r *http.Request) {
 
     fmt.Println(tok)
     fmt.Println(client)
-
-    // Write a JSON containg the processed response
-    // writeJSON(w, JSON{
-    //   "token": data["token"],
-    // })
   }
 }
 
@@ -249,6 +254,8 @@ func GetTasks(w http.ResponseWriter, r *http.Request) {
     } else {
       fmt.Fprintln(w, "no tasks")
     }
+  }else{
+    http.Error(w, "Only GET requests are allowed.", http.StatusMethodNotAllowed)
   }
 }
 

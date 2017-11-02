@@ -17,38 +17,52 @@ import (
   "google.golang.org/api/tasks/v1"
 )
 
+type (
+
+	// JSON Holds a JSON object
+	JSON map[string]interface{}
+
+)
+
+var client *http.Client
+
 // getClient uses a Context and Config to retrieve a Token
 // then generate a Client. It returns the generated Client.
-func getClient(ctx context.Context, config *oauth2.Config) *http.Client {
+func getClient(ctx context.Context, config *oauth2.Config, tok *oauth2.Token) *http.Client {
+
 //  cacheFile, err := tokenCacheFile()
   // if err != nil {
   //   log.Fatalf("Unable to get path to cached credential file. %v", err)
   // }
 //  tok, err := tokenFromFile(cacheFile)
 //  if err != nil {
-    tok := getTokenFromWeb(config)
+//    getTokenFromWeb(config, w)
 //    saveToken(cacheFile, tok)
 //  }
+  fmt.Println("22111")
   return config.Client(ctx, tok)
 }
 
 // getTokenFromWeb uses Config to request a Token.
 // It returns the retrieved Token.
-func getTokenFromWeb(config *oauth2.Config) *oauth2.Token {
+func sendAuthURL(config *oauth2.Config, w http.ResponseWriter)  {
+  fmt.Println("1111")
+
   authURL := config.AuthCodeURL("state-token", oauth2.AccessTypeOffline)
-  fmt.Printf("Go to the following link in your browser then type the "+
-    "authorization code: \n%v\n", authURL)
+  fmt.Fprintln(w, "Go to the following link in your browser then type the "+
+    "authorization code: " + authURL + " \n%v\n")
+  return
 
-  var code string
-  if _, err := fmt.Scan(&code); err != nil {
-    log.Fatalf("Unable to read authorization code %v", err)
-  }
-
-  tok, err := config.Exchange(oauth2.NoContext, code)
-  if err != nil {
-    log.Fatalf("Unable to retrieve token from web %v", err)
-  }
-  return tok
+  // var code string
+  // if _, err := fmt.Scan(&code); err != nil {
+  //   log.Fatalf("Unable to read authorization code %v", err)
+  // }
+  //
+  // tok, err := config.Exchange(oauth2.NoContext, code)
+  // if err != nil {
+  //   log.Fatalf("Unable to retrieve token from web %v", err)
+  // }
+  // return tok
 }
 
 // tokenCacheFile generates credential file path/filename.
@@ -104,55 +118,122 @@ func CreateTask(client *http.Client){
 	// fmt.Printf("Got task, err: %#v, %v", task, err)
 
 }
-func Main() {
-  ctx := context.Background()
 
-  b, err := ioutil.ReadFile("client_secret.json")
-  if err != nil {
-    log.Fatalf("Unable to read client secret file: %v", err)
+func PostCode(w http.ResponseWriter, r *http.Request) {
+  if r.Method == http.MethodGet {
+
+  //  ctx := context.Background()
+
+    b, err := ioutil.ReadFile("client_secret.json")
+    if err != nil {
+      log.Fatalf("Unable to read client secret file: %v", err)
+    }
+
+    // If modifying these scopes, delete your previously saved credentials
+    // at ~/.credentials/tasks-go-quickstart.json
+    config, err := google.ConfigFromJSON(b, tasks.TasksScope)
+    if err != nil {
+      log.Fatalf("Unable to parse client secret file to config: %v", err)
+    }
+  //  fmt.Println(config)
+  sendAuthURL(config, w)
+  //  getClient(ctx, config, w)
+      // fmt.Println(client)
   }
 
-  // If modifying these scopes, delete your previously saved credentials
-  // at ~/.credentials/tasks-go-quickstart.json
-  config, err := google.ConfigFromJSON(b, tasks.TasksScope)
-  if err != nil {
-    log.Fatalf("Unable to parse client secret file to config: %v", err)
-  }
-    client := getClient(ctx, config)
+  if r.Method == http.MethodPost {
+    data := JSON{}
+    if err := json.NewDecoder(r.Body).Decode(&data); err != nil {
+      http.Error(w, fmt.Sprintf("Couldn't decode JSON: %v.", err), http.StatusBadRequest)
+      return
+    }
+    defer r.Body.Close()
 
+    // Make sure a message key is defined in the body of the request
+    token, tokenFound := data["token"]
+    if !tokenFound {
+      http.Error(w, "Missing token key in body.", http.StatusBadRequest)
+      return
+    }
+
+    ctx := context.Background()
+    b, err := ioutil.ReadFile("client_secret.json")
+    if err != nil {
+      log.Fatalf("Unable to read client secret file: %v", err)
+    }
+    config, err := google.ConfigFromJSON(b, tasks.TasksScope)
+    if err != nil {
+      log.Fatalf("Unable to parse client secret file to config: %v", err)
+    }
+
+    tok, err := config.Exchange(oauth2.NoContext, token.(string))
+    if err != nil {
+      log.Fatalf("Unable to retrieve token from web %v", err)
+    }
+
+     client = getClient(ctx, config, tok)
+
+
+    fmt.Println(data["token"])
+    fmt.Println(client)
+
+    // Write a JSON containg the processed response
+    // writeJSON(w, JSON{
+    //   "token": data["token"],
+    // })
+  }
+}
+
+func GetTaskList(w http.ResponseWriter, req *http.Request){
+  //get
   srv, err := tasks.New(client)
   if err != nil {
     log.Fatalf("Unable to retrieve tasks Client %v", err)
   }
 
-  r, err := srv.Tasklists.List().MaxResults(10).Do()
+  r, err := srv.Tasklists.List().MaxResults(1).Do()
   if err != nil {
     log.Fatalf("Unable to retrieve task lists.", err)
   }
 
   fmt.Println("Task Lists:")
   if len(r.Items) > 0 {
-    for _, i := range r.Items {
-      fmt.Printf("%s (%s)\n", i.Title, i.Id)
-    }
+      fmt.Fprintln(w, r.Items[0].Title)
   } else {
-    fmt.Print("No task lists found.")
+    fmt.Fprint(w,"No task lists found.")
     return
   }
+}
 
-  // CreateTask(client)
-  taskapi, err := tasks.New(client)
-	if err != nil {
-		log.Fatalf("Unable to create Tasks service: %v", err)
-	}
+func Main() {
+  // ctx := context.Background()
+  //
+  // b, err := ioutil.ReadFile("client_secret.json")
+  // if err != nil {
+  //   log.Fatalf("Unable to read client secret file: %v", err)
+  // }
+  //
+  // // If modifying these scopes, delete your previously saved credentials
+  // // at ~/.credentials/tasks-go-quickstart.json
+  // config, err := google.ConfigFromJSON(b, tasks.TasksScope)
+  // if err != nil {
+  //   log.Fatalf("Unable to parse client secret file to config: %v", err)
+  // }
+  //
 
-  tasklistId := r.Items[0].Id
-	task, err := taskapi.Tasks.Insert(tasklistId, &tasks.Task{
-		Title: "finish this API code generator thing",
-		Notes: "ummmm tala3to 3einy",
-		Due:   "2011-10-15T12:00:00.000Z",
-	}).Do()
-	fmt.Printf("Got task, err: %#v, %v", task, err)
-
+  // // CreateTask(client)
+  // taskapi, err := tasks.New(client)
+	// if err != nil {
+	// 	log.Fatalf("Unable to create Tasks service: %v", err)
+	// }
+  //
+  // tasklistId := r.Items[0].Id
+	// task, err := taskapi.Tasks.Insert(tasklistId, &tasks.Task{
+	// 	Title: "finish this API code generator thing",
+	// 	Notes: "ummmm tala3to 3einy",
+	// 	Due:   "2011-10-15T12:00:00.000Z",
+	// }).Do()
+	// fmt.Printf("Got task, err: %#v, %v", task, err)
+  //
 
 }

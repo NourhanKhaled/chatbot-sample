@@ -188,6 +188,7 @@ func Engage(addr string) error {
 	mux.HandleFunc("/", withLog(tasklistAPI.PostCode))
 	mux.HandleFunc("/tasks", withLog(tasklistAPI.GetTasks))
 	mux.HandleFunc("/create", withLog(tasklistAPI.CreateTask))
+	mux.HandleFunc("/delete/", withLog(tasklistAPI.DeleteTask))
 
 
 	// Start the server

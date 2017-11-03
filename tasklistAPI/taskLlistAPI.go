@@ -11,6 +11,8 @@ import (
   "os/user"
   "path/filepath"
   "time"
+  "strings"
+  "strconv"
 
   "golang.org/x/net/context"
   "golang.org/x/oauth2"
@@ -27,23 +29,6 @@ type (
 )
 
 var client *http.Client
-
-// getClient uses a Context and Config to retrieve a Token
-// then generate a Client. It returns the generated Client.
-func getClient(ctx context.Context, config *oauth2.Config, tok *oauth2.Token) *http.Client {
-
- // cacheFile, err := tokenCacheFile()
- //  if err != nil {
- //    log.Fatalf("Unable to get path to cached credential file. %v", err)
- //  }
- // tok, err := tokenFromFile(cacheFile)
- // if err != nil {
- //   getTokenFromWeb(config, w)
- //   saveToken(cacheFile, tok)
- // }
-  fmt.Println("22111")
-  return config.Client(ctx, tok)
-}
 
 // getTokenFromWeb uses Config to request a Token.
 // It returns the retrieved Token.
@@ -152,10 +137,71 @@ func CreateTask(w http.ResponseWriter, r *http.Request) {
   		Due:   newformat,
   	}).Do()
   	fmt.Printf("Got task, err: %#v, %v", task, err)
-  }else{
+  } else {
     http.Error(w, "Only POST requests are allowed.", http.StatusMethodNotAllowed)
   }
 }
+
+func DeleteTask(w http.ResponseWriter, r *http.Request) {
+  if(r.Method == http.MethodDelete) {
+    index := strings.TrimPrefix(r.URL.Path, "/delete/")
+    taskIndex, err := strconv.Atoi(index)
+
+    if err != nil {
+      http.Error(w, "Enter a valid id", http.StatusBadRequest)
+      return
+    }
+
+    srv, err := tasks.New(client)
+    if err != nil {
+    	log.Fatalf("Unable to create Tasks service: %v", err)
+    }
+
+    tasklistId,err := GetTaskList()
+
+    if err != nil {
+  		log.Fatalf("Unable to get tasklist: %v", err)
+  	}
+    tasks, err := srv.Tasks.List(tasklistId).Do()
+
+    if len(tasks.Items) < taskIndex {
+      http.Error(w, "Unable to delete task", http.StatusBadRequest)
+      return
+    }
+
+    taskId := tasks.Items[taskIndex].Id
+    err = srv.Tasks.Delete(tasklistId, taskId).Do();
+
+    if(err != nil) {
+      http.Error(w, "Unable to delete task", http.StatusBadRequest)
+      return
+    }
+    fmt.Fprintln(w,"Deleted")
+  }
+}
+
+// func UpdateTask(w http.ResponseWriter, r *http.Request) {
+//   if r.Method == http.MethodPost {
+//     taskapi, err := tasks.New(client)
+//   	if err != nil {
+//   		log.Fatalf("Unable to create Tasks service: %v", err)
+//   	}
+//
+//     tasklistId,err := GetTaskList()
+//     if err != nil {
+//   		log.Fatalf("Unable to get tasklist: %v", err)
+//   	}
+//
+//     data := JSON{}
+//     if err := json.NewDecoder(r.Body).Decode(&data); err != nil {
+//       http.Error(w, fmt.Sprintf("Couldn't decode JSON: %v.", err), http.StatusBadRequest)
+//       return
+//     }
+//     defer r.Body.Close()
+//
+//
+//   }
+// }
 
 func PostCode(w http.ResponseWriter, r *http.Request) {
   ctx := context.Background()
@@ -180,7 +226,8 @@ func PostCode(w http.ResponseWriter, r *http.Request) {
     if err != nil {
       sendAuthURL(config, w)
     } else {
-      client = getClient(ctx, config, tok)
+      // client = getClient(ctx, config, tok)
+      client = config.Client(ctx, tok)
     }
   }
 
@@ -204,7 +251,8 @@ func PostCode(w http.ResponseWriter, r *http.Request) {
       log.Fatalf("Unable to retrieve token from web %v", err)
     }
 
-     client = getClient(ctx, config, tok)
+    //  client = getClient(ctx, config, tok)
+    client = config.Client(ctx, tok)
      saveToken(cacheFile, tok)
 
     fmt.Println(tok)
@@ -234,8 +282,7 @@ func GetTasks(w http.ResponseWriter, r *http.Request) {
       log.Fatalf("Unable to retrieve tasks %v!", err)
     }
     fmt.Println("Type")
-    // fmt.Println(reflect.TypeOf(tasks))
-    // writeJSON(w, tasks)
+
     if len(tasks.Items) > 0 {
       x := len(tasks.Items)
       arr := make([]JSON,x)
@@ -250,7 +297,7 @@ func GetTasks(w http.ResponseWriter, r *http.Request) {
           "completed": i.Completed,
       	}
       }
-      writeJSON(w,JSON{
+      writeJSON(w, JSON {
         "tasks": arr,
       })
     } else {
@@ -279,26 +326,4 @@ func GetTaskList() (string,error) {
   } else {
     return "", fmt.Errorf("Task list not found")
   }
-}
-
-func Main() {
-
-  // ctx := context.Background()
-  //
-  // b, err := ioutil.ReadFile("client_secret.json")
-  // if err != nil {
-  //   log.Fatalf("Unable to read client secret file: %v", err)
-  // }
-  //
-  // // If modifying these scopes, delete your previously saved credentials
-  // // at ~/.credentials/tasks-go-quickstart.json
-  // config, err := google.ConfigFromJSON(b, tasks.TasksScope)
-  // if err != nil {
-  //   log.Fatalf("Unable to parse client secret file to config: %v", err)
-  // }
-  //
-
-  // // CreateTask(client)
-
-
 }

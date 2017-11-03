@@ -7,7 +7,6 @@ import (
 	"os"
 	"strings"
 	//"net/http"
-	"github.com/NourhanKhaled/chatbot-sample/tasklistAPI"
 	"github.com/ramin0/chatbot"
 )
 
@@ -60,7 +59,4 @@ func main() {
 	// Start the server
 	fmt.Printf("Listening on port %s...\n", port)
 	log.Fatalln(chatbot.Engage(":" + port))
-	fmt.Println("looz")
-	tasklistAPI.Main()
-
 }

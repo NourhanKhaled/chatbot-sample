@@ -11,7 +11,7 @@ import (
   "os/user"
   "path/filepath"
   "time"
-  "strings"
+  //"strings"
   "strconv"
 
   "golang.org/x/net/context"
@@ -32,24 +32,22 @@ var client *http.Client
 
 // getTokenFromWeb uses Config to request a Token.
 // It returns the retrieved Token.
-func sendAuthURL(config *oauth2.Config, w http.ResponseWriter)  {
-  fmt.Println("1111")
+func SendAuthURL()string  {
+  b, err := ioutil.ReadFile("client_secret.json")
+  if err != nil {
+    log.Fatalf("Unable to read client secret file: %v", err)
+  }
 
+  config, err := google.ConfigFromJSON(b, tasks.TasksScope)
+  if err != nil {
+    log.Fatalf("Unable to parse client secret file to config: %v", err)
+  }
   authURL := config.AuthCodeURL("state-token", oauth2.AccessTypeOffline)
-  fmt.Fprintln(w, "Go to the following link in your browser then type the "+
-    "authorization code: " + authURL + " \n%v\n")
-  return
 
-  // var code string
-  // if _, err := fmt.Scan(&code); err != nil {
-  //   log.Fatalf("Unable to read authorization code %v", err)
-  // }
-  //
-  // tok, err := config.Exchange(oauth2.NoContext, code)
-  // if err != nil {
-  //   log.Fatalf("Unable to retrieve token from web %v", err)
-  // }
-  // return tok
+  fmt.Println(authURL)
+  return "Go to the following link in your browser then type the "+
+          "authorization code: " + authURL
+
 }
 
 // tokenCacheFile generates credential file path/filename.
@@ -90,66 +88,126 @@ func saveToken(file string, token *oauth2.Token) {
   json.NewEncoder(f).Encode(token)
 }
 
-func CreateTask(w http.ResponseWriter, r *http.Request) {
+func CreateTask(title string, notes string, due string) (string, error) {
+  fmt.Println("In create task")
+  fmt.Println(title)
+  fmt.Println(due)
+  fmt.Println(notes)
+  taskapi, err := tasks.New(client)
+	if err != nil {
+		log.Fatalf("Unable to create Tasks service: %v", err)
+	}
 
-  if r.Method == http.MethodPost {
-    taskapi, err := tasks.New(client)
-  	if err != nil {
-  		log.Fatalf("Unable to create Tasks service: %v", err)
-  	}
+  tasklistId,err := GetTaskList()
+  if err != nil {
+		log.Fatalf("Unable to get tasklist: %v", err)
+	}
 
-    tasklistId,err := GetTaskList()
-    if err != nil {
-  		log.Fatalf("Unable to get tasklist: %v", err)
-  	}
+  // data := JSON{}
+  // if err := json.NewDecoder(r.Body).Decode(&data); err != nil {
+  //   return "", fmt.Errorf("Couldn't decode JSON: %v.", err)
+  // }
+  // defer r.Body.Close()
 
-    data := JSON{}
-    if err := json.NewDecoder(r.Body).Decode(&data); err != nil {
-      http.Error(w, fmt.Sprintf("Couldn't decode JSON: %v.", err), http.StatusBadRequest)
-      return
-    }
-    defer r.Body.Close()
+  // Make sure a message key is defined in the body of the request
+  if len(title) == 0 {
+    return "", fmt.Errorf("Missing title in body.")
+  }
 
-    // Make sure a message key is defined in the body of the request
-    title, titleFound := data["title"]
-    if !titleFound {
-      http.Error(w, "Missing token key in body.", http.StatusBadRequest)
-      return
-    }
+  if len(due) == 0 {
+    return "", fmt.Errorf("Missing due date in body.")
+  }
 
-    due, dueFound := data["due"]
-    if !dueFound {
-      http.Error(w, "Missing token key in body.", http.StatusBadRequest)
-      return
-    }
+  date, err := time.Parse("06/1/200615:04", due)
+  fmt.Println(date)
+  if err != nil {
+    return "", fmt.Errorf("wrong date format")
+  }
 
-    date, err := time.Parse("06/1/2006 15:04", due.(string))
+  newformat := date.Format("2006-01-02T15:04:05Z")
+	task, err := taskapi.Tasks.Insert(tasklistId, &tasks.Task{
+		Title: title,
+		Notes: notes,
+		Due:   newformat,
+	}).Do()
+  fmt.Printf("Got task, err: %#v, %v", task, err)
+
+  return "task inserted", nil
+
+}
+
+func UpdateTask(taskNumber string, title string, notes string, due string) (string, error) {
+  fmt.Println("In update task")
+  fmt.Println(title)
+  fmt.Println(due)
+  fmt.Println(notes)
+  taskapi, err := tasks.New(client)
+	if err != nil {
+		log.Fatalf("Unable to update Tasks service: %v", err)
+	}
+
+  tasklistId,err := GetTaskList()
+  if err != nil {
+		log.Fatalf("Unable to get tasklist: %v", err)
+	}
+  taskIndex, err := strconv.Atoi(taskNumber)
+
+  if err != nil {
+    return "", fmt.Errorf("Invalid index")
+  }
+
+  tasksarr, err := taskapi.Tasks.List(tasklistId).Do()
+
+  if len(tasksarr.Items) < taskIndex {
+    return "", fmt.Errorf("Invalid task number")
+  }
+
+  taskId := tasksarr.Items[taskIndex].Id
+
+  updatedTitle := tasksarr.Items[taskIndex].Title
+  updatedNotes := tasksarr.Items[taskIndex].Notes
+  updatedDue := tasksarr.Items[taskIndex].Due
+
+  if len(title) != 0 {
+    updatedTitle = title
+  }
+
+  if len(due) != 0 {
+    date, err := time.Parse("06/1/200615:04", due)
     fmt.Println(date)
     if err != nil {
-      http.Error(w, "wrong date format", http.StatusBadRequest)
-      return
+      return "", fmt.Errorf("wrong date format")
     }
 
     newformat := date.Format("2006-01-02T15:04:05Z")
-  	task, err := taskapi.Tasks.Insert(tasklistId, &tasks.Task{
-  		Title: title.(string),
-  		Notes: data["notes"].(string),
-  		Due:   newformat,
-  	}).Do()
-  	fmt.Printf("Got task, err: %#v, %v", task, err)
-  } else {
-    http.Error(w, "Only POST requests are allowed.", http.StatusMethodNotAllowed)
+    updatedDue = newformat
   }
+
+  if len(notes) != 0 {
+    updatedNotes = notes
+  }
+
+  task, err := taskapi.Tasks.Patch(tasklistId, taskId,&tasks.Task{
+    Title: updatedTitle,
+    Due: updatedDue,
+    Notes: updatedNotes,
+  }).Do()
+
+  fmt.Printf("Got task, err: %#v, %v", task, err)
+  if err != nil {
+    return "", fmt.Errorf("Error updating notes")
+  }
+  return "Task updated", nil
+
 }
 
-func DeleteTask(w http.ResponseWriter, r *http.Request) {
-  if(r.Method == http.MethodDelete) {
-    index := strings.TrimPrefix(r.URL.Path, "/delete/")
+
+func DeleteTask(index string) (string, error){
+    //index := strings.TrimPrefix(r.URL.Path, "/delete/")
     taskIndex, err := strconv.Atoi(index)
 
     if err != nil {
-      http.Error(w, "Enter a valid id", http.StatusBadRequest)
-      return
+      return "", fmt.Errorf("Invalid index")
     }
 
     srv, err := tasks.New(client)
@@ -165,45 +223,58 @@ func DeleteTask(w http.ResponseWriter, r *http.Request) {
     tasks, err := srv.Tasks.List(tasklistId).Do()
 
     if len(tasks.Items) < taskIndex {
-      http.Error(w, "Unable to delete task", http.StatusBadRequest)
-      return
+      return "", fmt.Errorf("Invalid task number")
     }
 
     taskId := tasks.Items[taskIndex].Id
     err = srv.Tasks.Delete(tasklistId, taskId).Do();
 
     if(err != nil) {
-      http.Error(w, "Unable to delete task", http.StatusBadRequest)
-      return
+
+      return "", fmt.Errorf("Unable to delete task")
     }
-    fmt.Fprintln(w,"Deleted")
-  }
+    return "Task is deleted",nil
+
+}
+func TaskCompleted(index string) (string, error){
+    //index := strings.TrimPrefix(r.URL.Path, "/delete/")
+    taskIndex, err := strconv.Atoi(index)
+
+    if err != nil {
+      return "", fmt.Errorf("Invalid index")
+    }
+
+    srv, err := tasks.New(client)
+    if err != nil {
+    	log.Fatalf("Unable to create Tasks service: %v", err)
+    }
+
+    tasklistId,err := GetTaskList()
+
+    if err != nil {
+  		log.Fatalf("Unable to get tasklist: %v", err)
+  	}
+    taskarr, err := srv.Tasks.List(tasklistId).Do()
+
+    if len(taskarr.Items) < taskIndex {
+      return "", fmt.Errorf("Invalid task number")
+    }
+
+    taskId := taskarr.Items[taskIndex].Id
+    now := time.Now().Format("2006-01-02T15:04:05Z")
+    task, err := srv.Tasks.Patch(tasklistId, taskId,&tasks.Task{
+      Completed: &now,
+    }).Do()
+    fmt.Println(task)
+    if err != nil{
+      return "", fmt.Errorf("Error in updating task")
+    } else{
+      return "Task is updated",nil
+    }
+
 }
 
-// func UpdateTask(w http.ResponseWriter, r *http.Request) {
-//   if r.Method == http.MethodPost {
-//     taskapi, err := tasks.New(client)
-//   	if err != nil {
-//   		log.Fatalf("Unable to create Tasks service: %v", err)
-//   	}
-//
-//     tasklistId,err := GetTaskList()
-//     if err != nil {
-//   		log.Fatalf("Unable to get tasklist: %v", err)
-//   	}
-//
-//     data := JSON{}
-//     if err := json.NewDecoder(r.Body).Decode(&data); err != nil {
-//       http.Error(w, fmt.Sprintf("Couldn't decode JSON: %v.", err), http.StatusBadRequest)
-//       return
-//     }
-//     defer r.Body.Close()
-//
-//
-//   }
-// }
-
-func PostCode(w http.ResponseWriter, r *http.Request) {
+func PostCode(token string) (string, error) {
   ctx := context.Background()
 
   b, err := ioutil.ReadFile("client_secret.json")
@@ -216,48 +287,16 @@ func PostCode(w http.ResponseWriter, r *http.Request) {
     log.Fatalf("Unable to parse client secret file to config: %v", err)
   }
 
-  cacheFile, err := tokenCacheFile()
-   if err != nil {
-     log.Fatalf("Unable to get path to cached credential file. %v", err)
-   }
-
-  if r.Method == http.MethodGet {
-    tok, err := tokenFromFile(cacheFile)
-    if err != nil {
-      sendAuthURL(config, w)
-    } else {
-      // client = getClient(ctx, config, tok)
-      client = config.Client(ctx, tok)
-    }
+  tok, err := config.Exchange(oauth2.NoContext, token)
+  if err != nil {
+    return "",err
   }
-
-  if r.Method == http.MethodPost {
-    data := JSON{}
-    if err := json.NewDecoder(r.Body).Decode(&data); err != nil {
-      http.Error(w, fmt.Sprintf("Couldn't decode JSON: %v.", err), http.StatusBadRequest)
-      return
-    }
-    defer r.Body.Close()
-
-    // Make sure a message key is defined in the body of the request
-    token, tokenFound := data["token"]
-    if !tokenFound {
-      http.Error(w, "Missing token key in body.", http.StatusBadRequest)
-      return
-    }
-
-    tok, err := config.Exchange(oauth2.NoContext, token.(string))
-    if err != nil {
-      log.Fatalf("Unable to retrieve token from web %v", err)
-    }
-
-    //  client = getClient(ctx, config, tok)
-    client = config.Client(ctx, tok)
-     saveToken(cacheFile, tok)
-
-    fmt.Println(tok)
-    fmt.Println(client)
-  }
+  client = config.Client(ctx, tok)
+  welcomeMessage := "Welcome, you are now logged in. \n To create a task type create: title: Your Title, notes: notes, due: Due date \n" +
+                    "To update a task type update: task number, field: value \n" +
+                    "To delete a task type delete: task number \n" +
+                    "To view all tasks type view"
+  return welcomeMessage,nil
 }
 
 // writeJSON Writes the JSON equivilant for data into ResponseWriter w
@@ -266,46 +305,41 @@ func writeJSON(w http.ResponseWriter, data JSON) {
 	json.NewEncoder(w).Encode(data)
 }
 
-func GetTasks(w http.ResponseWriter, r *http.Request) {
-  if r.Method == http.MethodGet {
+func GetTasks() (string,error) {
     tasklistId, err := GetTaskList()
-    fmt.Println(tasklistId)
     if(err != nil) {
-      log.Fatalf("Unable to read task list: %v", err)
-      return
+      return "", err
     }
-
     srv, err := tasks.New(client)
-
     tasks, err := srv.Tasks.List(tasklistId).Do()
     if err != nil {
-      log.Fatalf("Unable to retrieve tasks %v!", err)
+      return "", err
     }
-    fmt.Println("Type")
 
     if len(tasks.Items) > 0 {
-      x := len(tasks.Items)
-      arr := make([]JSON,x)
+      //arr := make([]JSON,x)
+      message := ""
       for c, i := range tasks.Items {
-        arr[c] = JSON {
-          "index": c,
-          "title": i.Title,
-          "updated": i.Updated,
-          "notes": i.Notes,
-          "status": i.Status,
-          "due": i.Due,
-          "completed": i.Completed,
-      	}
+        t := strconv.Itoa(c)
+        comp := "No"
+        if(i.Completed != nil){
+          comp  = "Yes"
+        }
+
+        fmt.Println(i.Completed)
+
+        message += "Task Number: " + t + ",\n"+
+          "Title: " + i.Title + ",\n"+
+          "Updated: " + i.Updated + ",\n" +
+          "Notes: " + i.Notes + ",\n" +
+          "Due: " + i.Due + ",\n" +
+          "Completed: " + comp + "\n\n"
       }
-      writeJSON(w, JSON {
-        "tasks": arr,
-      })
+      return message,nil
     } else {
-      fmt.Fprintln(w, "no tasks")
+      return "No tasks",nil
     }
-  }else{
-    http.Error(w, "Only GET requests are allowed.", http.StatusMethodNotAllowed)
-  }
+
 }
 
 func GetTaskList() (string,error) {

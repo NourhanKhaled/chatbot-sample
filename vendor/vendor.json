@@ -3,6 +3,24 @@
 	"ignore": "test",
 	"package": [
 		{
+			"checksumSHA1": "AH7jcN7pvaPDU6UjHdpT081DDGk=",
+			"path": "cloud.google.com/go/compute/metadata",
+			"revision": "a3909c244aef74c9432de4e3e0e7dd5ece68ed12",
+			"revisionTime": "2017-11-01T19:42:33Z"
+		},
+		{
+			"checksumSHA1": "nYmZQ6nxjskefeKXrCzQ4Wjat24=",
+			"path": "github.com/NourhanKhaled/chatbot-sample",
+			"revision": "b7e61d92f6ed440c5bbf48df117d9ba154d5d618",
+			"revisionTime": "2017-11-03T16:00:02Z"
+		},
+		{
+			"checksumSHA1": "nPjiPvpQH/U9GFYhmaXfN/3ps2E=",
+			"path": "github.com/NourhanKhaled/chatbot-sample/tasklistAPI",
+			"revision": "b7e61d92f6ed440c5bbf48df117d9ba154d5d618",
+			"revisionTime": "2017-11-03T16:00:02Z"
+		},
+		{
 			"checksumSHA1": "66FySld60ai7A8X83tqwih+Iguc=",
 			"path": "github.com/heppu/simple-cors",
 			"revision": "543cdec07e0c196abd48c5d966c0a0684cc47308",
@@ -27,9 +45,75 @@
 			"revisionTime": "2017-09-22T23:21:59Z"
 		},
 		{
+			"checksumSHA1": "GtamqiJoL7PGHsN454AoffBFMa8=",
+			"path": "golang.org/x/net/context",
+			"revision": "ea0da6f35caf3ff91581c800469e22eef75076f4",
+			"revisionTime": "2017-11-01T22:18:28Z"
+		},
+		{
+			"checksumSHA1": "WHc3uByvGaMcnSoI21fhzYgbOgg=",
+			"path": "golang.org/x/net/context/ctxhttp",
+			"revision": "ea0da6f35caf3ff91581c800469e22eef75076f4",
+			"revisionTime": "2017-11-01T22:18:28Z"
+		},
+		{
+			"checksumSHA1": "HmVJmSDDCwsPJQrp7ml2gXb2szg=",
+			"path": "golang.org/x/oauth2",
+			"revision": "bb50c06baba3d0c76f9d125c0719093e315b5b44",
+			"revisionTime": "2017-09-28T00:25:42Z"
+		},
+		{
+			"checksumSHA1": "JTBn9MQUhwHtjwv7rC9Zg4KRN7g=",
+			"path": "golang.org/x/oauth2/google",
+			"revision": "bb50c06baba3d0c76f9d125c0719093e315b5b44",
+			"revisionTime": "2017-09-28T00:25:42Z"
+		},
+		{
+			"checksumSHA1": "4XCNzl3cgGtdd0SrUZHSBdsW+m4=",
+			"path": "golang.org/x/oauth2/internal",
+			"revision": "bb50c06baba3d0c76f9d125c0719093e315b5b44",
+			"revisionTime": "2017-09-28T00:25:42Z"
+		},
+		{
+			"checksumSHA1": "huVltYnXdRFDJLgp/ZP9IALzG7g=",
+			"path": "golang.org/x/oauth2/jws",
+			"revision": "bb50c06baba3d0c76f9d125c0719093e315b5b44",
+			"revisionTime": "2017-09-28T00:25:42Z"
+		},
+		{
+			"checksumSHA1": "/eV4E08BY+f1ZikiR7OOMJAj3m0=",
+			"path": "golang.org/x/oauth2/jwt",
+			"revision": "bb50c06baba3d0c76f9d125c0719093e315b5b44",
+			"revisionTime": "2017-09-28T00:25:42Z"
+		},
+		{
 			"path": "google.golang.org/api/calendar/v3",
 			"revision": ""
+		},
+		{
+			"checksumSHA1": "/y0saWnM+kTnSvZrNlvoNOgj0Uo=",
+			"path": "google.golang.org/api/gensupport",
+			"revision": "75149eb4675e362b80c52d281a8df0d6aaf01dc6",
+			"revisionTime": "2017-11-01T00:03:09Z"
+		},
+		{
+			"checksumSHA1": "BWKmb7kGYbfbvXO6E7tCpTh9zKE=",
+			"path": "google.golang.org/api/googleapi",
+			"revision": "75149eb4675e362b80c52d281a8df0d6aaf01dc6",
+			"revisionTime": "2017-11-01T00:03:09Z"
+		},
+		{
+			"checksumSHA1": "1K0JxrUfDqAB3MyRiU1LKjfHyf4=",
+			"path": "google.golang.org/api/googleapi/internal/uritemplates",
+			"revision": "75149eb4675e362b80c52d281a8df0d6aaf01dc6",
+			"revisionTime": "2017-11-01T00:03:09Z"
+		},
+		{
+			"checksumSHA1": "DIjRyY+w5GmKOyuNrGuKIeHJ/MQ=",
+			"path": "google.golang.org/api/tasks/v1",
+			"revision": "75149eb4675e362b80c52d281a8df0d6aaf01dc6",
+			"revisionTime": "2017-11-01T00:03:09Z"
 		}
 	],
-	"rootPath": "github.com/ramin0/chatbot-sample"
+	"rootPath": "github.com/NourhanKhaled/chatbot-sample"
 }

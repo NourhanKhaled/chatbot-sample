@@ -103,12 +103,6 @@ func CreateTask(title string, notes string, due string) (string, error) {
 		log.Fatalf("Unable to get tasklist: %v", err)
 	}
 
-  // data := JSON{}
-  // if err := json.NewDecoder(r.Body).Decode(&data); err != nil {
-  //   return "", fmt.Errorf("Couldn't decode JSON: %v.", err)
-  // }
-  // defer r.Body.Close()
-
   // Make sure a message key is defined in the body of the request
   if len(title) == 0 {
     return "", fmt.Errorf("Missing title in body.")

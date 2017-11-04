@@ -5,7 +5,7 @@ import (
 	"log"
 	"os"
 	"strings"
-	
+
 	"github.com/NourhanKhaled/chatbot-sample/tasklistAPI"
 	"github.com/ramin0/chatbot"
 )
@@ -37,31 +37,27 @@ func chatbotProcess(session chatbot.Session, message string) (string, error) {
 			return "", err
 		}
 		return message, nil
-	}
-	if key == "delete:" {
+	}	else if key == "delete:" {
 		taskNumber := s[1]
 		message, err := tasklistAPI.DeleteTask(taskNumber)
 		if err != nil {
 			return "", err
 		}
 		return message, nil
-	}
-	if key == "completed:" {
+	}	else if key == "completed:" {
 		taskNumber := s[1]
 		message, err := tasklistAPI.TaskCompleted(taskNumber)
 		if err != nil {
 			return "", err
 		}
 		return message, nil
-	}
-	if key == "view" {
+	}	else if key == "view" {
 		message, err := tasklistAPI.GetTasks()
 		if err != nil {
 			return "", err
 		}
 		return message, nil
-	}
-	if key == "create:" {
+	} else if key == "create:" {
 		title := ""
 		notes := ""
 		due := ""
@@ -76,7 +72,7 @@ func chatbotProcess(session chatbot.Session, message string) (string, error) {
 						i = j - 1
 						break
 					}
-					title += curr1
+					title += curr1+" "
 				}
 			}
 
@@ -87,7 +83,7 @@ func chatbotProcess(session chatbot.Session, message string) (string, error) {
 						i = j - 1
 						break
 					}
-					notes += curr1
+					notes += curr1+" "
 				}
 			}
 
@@ -108,9 +104,7 @@ func chatbotProcess(session chatbot.Session, message string) (string, error) {
 			return "", err
 		}
 		return message, nil
-	}
-
-	if key == "update:" {
+	} else if key == "update:" {
 		taskNumber := s[1]
 		title := ""
 		notes := ""
@@ -158,6 +152,12 @@ func chatbotProcess(session chatbot.Session, message string) (string, error) {
 			return "", err
 		}
 		return message, nil
+	} else{
+		message := "You have entered an invalid message. To create a task type create: title: Your Title, notes: notes, due: Due date \n" +
+	                    "To update a task type update: task number, field: value \n" +
+	                    "To delete a task type delete: task number \n" +
+	                    "To view all tasks type view"
+		return message,nil
 	}
 
 	// Form a sentence out of the history in the form Message 1, Message 2, and Message 3

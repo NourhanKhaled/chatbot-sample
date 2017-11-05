@@ -158,12 +158,13 @@ func chatbotProcess(session chatbot.Session, message string) (string, error) {
 			return "", err
 		}
 		return message, nil
-	} else{
-		message := "You have entered an invalid message. To create a task type create: title: Your Title, notes: notes, due: Due date \n" +
-	                    "To update a task type update: task number, field: value \n" +
-	                    "To delete a task type delete: task number \n" +
-	                    "To view all tasks type view"
-		return message,nil
+	} else {
+		message := "You have entered an invalid message.</br> To create a task type create: title: Your Title, notes: notes, due: Due date </br>" +
+	                    "To update a task type update: task number, field: value </br>" +
+	                    "To delete a task type delete: task number </br>" +
+	                    "To view all tasks type view </br>" +
+											"When a task is completed type completed: `task number`"
+		return message, nil
 	}
 
 	// Form a sentence out of the history in the form Message 1, Message 2, and Message 3

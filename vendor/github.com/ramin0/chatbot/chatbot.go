@@ -12,7 +12,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/NourhanKhaled/chatbot-sample/tasklistAPI"
 	cors "github.com/heppu/simple-cors"
 )
 
@@ -50,142 +49,15 @@ func sampleProcessor(session Session, message string) (string, error) {
 	// Fetch the history from session and cast it to an array of strings
 	history, _ := session["history"].([]string)
 
+	// Make sure the message is unique in history
+	for _, m := range history {
+		if strings.EqualFold(m, message) {
+			return "", fmt.Errorf("You've already ordered %s before!", message)
+		}
+	}
+
 	// Add the message in the parsed body to the messages in the session
 	history = append(history, message)
-
-	s := strings.Split(message, " ")
-	key := s[0]
-
-	if(key == "token:") {
-		tok := s[1]
-		session["token"] = tok
-		message,err := tasklistAPI.PostCode(tok)
-		if err!=nil {
-			return "",err
-		}
-		return message,nil
-	}
-	if(key == "delete:") {
-		taskNumber := s[1]
-		message,err := tasklistAPI.DeleteTask(taskNumber)
-		if err!=nil {
-			return "",err
-		}
-		return message,nil
-	}
-	if(key == "completed:") {
-		taskNumber := s[1]
-		message,err := tasklistAPI.TaskCompleted(taskNumber)
-		if err!=nil {
-			return "",err
-		}
-		return message,nil
-	}
-	if(key == "view") {
-		message,err := tasklistAPI.GetTasks()
-		if err!=nil {
-			return "",err
-		}
-		return message,nil
-	}
-	if(key == "create:") {
-		title := ""
-		notes := ""
-		due := ""
-
-		for i := 1; i < len(s); i++ {
-			curr := s[i]
-
-			if(curr == "title:") {
-				for j := i+1; j < len(s); j++ {
-					curr1 := s[j]
-					if(curr1 == "notes:" || curr1 == "due:") {
-						i = j-1
-						break
-					}
-					title += curr1
-				}
-			}
-
-			if(curr == "notes:") {
-				for j := i+1; j < len(s); j++ {
-					curr1 := s[j]
-					if(curr1 == "title:" || curr1 == "due:") {
-						i = j-1
-						break
-					}
-					notes += curr1
-				}
-			}
-
-			if(curr == "due:") {
-				for j := i+1; j < len(s); j++ {
-					curr1 := s[j]
-					if(curr1 == "notes:" || curr1 == "title:") {
-						i = j-1
-						break
-					}
-					due += curr1
-				}
-			}
-		}
-
-		message,err := tasklistAPI.CreateTask(title, notes, due)
-		if err!=nil {
-			return "",err
-		}
-		return message,nil
-	}
-
-	if(key == "update:") {
-		taskNumber := s[1]
-		title := ""
-		notes := ""
-		due := ""
-
-		for i := 2; i < len(s); i++ {
-			curr := s[i]
-
-			if(curr == "title:") {
-				for j := i+1; j < len(s); j++ {
-					curr1 := s[j]
-					if(curr1 == "notes:" || curr1 == "due:") {
-						i = j-1
-						break
-					}
-					title += curr1+" "
-				}
-			}
-
-			if(curr == "notes:") {
-				for j := i+1; j < len(s); j++ {
-					curr1 := s[j]
-					if(curr1 == "title:" || curr1 == "due:") {
-						i = j-1
-						break
-					}
-					notes += curr1+" "
-				}
-			}
-
-			if(curr == "due:") {
-				for j := i+1; j < len(s); j++ {
-					curr1 := s[j]
-					if(curr1 == "notes:" || curr1 == "title:") {
-						i = j-1
-						break
-					}
-					due += curr1
-				}
-			}
-		}
-
-		message,err := tasklistAPI.UpdateTask(taskNumber,title, notes, due)
-		if err!=nil {
-			return "",err
-		}
-		return message,nil
-	}
 
 	// Form a sentence out of the history in the form Message 1, Message 2, and Message 3
 	l := len(history)
@@ -200,52 +72,6 @@ func sampleProcessor(session Session, message string) (string, error) {
 	session["history"] = history
 
 	return fmt.Sprintf("So, you want %s! What else?", strings.ToLower(sentence)), nil
-}
-
-func chat(w http.ResponseWriter, r *http.Request) {
-	if r.Method != http.MethodPost {
-		http.Error(w, "Only POST requests are allowed.", http.StatusMethodNotAllowed)
-		return
-	}
-
-	//Make sure a UUID exists in the Authorization header
-	uuid := r.Header.Get("Authorization")
-	if uuid == "" {
-		http.Error(w, "Missing or empty Authorization header.", http.StatusUnauthorized)
-		return
-	}
-
-	//Make sure a session exists for the extracted UUID
-	session, sessionFound := sessions[uuid]
-	if !sessionFound {
-		http.Error(w, fmt.Sprintf("No session found for: %v.", uuid), http.StatusUnauthorized)
-		return
-	}
-
-  data := JSON{}
-  if err := json.NewDecoder(r.Body).Decode(&data); err != nil {
-    http.Error(w, fmt.Sprintf("Couldn't decode JSON: %v.", err), http.StatusBadRequest)
-    return
-  }
-  defer r.Body.Close()
-
-  // Make sure a message key is defined in the body of the request
-  _, messageFound := data["message"]
-  if !messageFound {
-    http.Error(w, "Missing message key in body.", http.StatusBadRequest)
-    return
-  }
-
-	message, err := processor(session, data["message"].(string))
-	if err != nil {
-		http.Error(w, err.Error(), 422 /* http.StatusUnprocessableEntity */)
-		return
-	}
-	writeJSON(w, JSON{
-		"uuid": uuid,
-		"message": message,
-	})
-
 }
 
 // withLog Wraps HandlerFuncs to log requests to Stdout
@@ -280,17 +106,15 @@ func handleWelcome(w http.ResponseWriter, r *http.Request) {
 	hasher := md5.New()
 	hasher.Write([]byte(strconv.FormatInt(time.Now().Unix(), 10)))
 	uuid := hex.EncodeToString(hasher.Sum(nil))
-	message := tasklistAPI.SendAuthURL()
+
 	// Create a session for this UUID
 	sessions[uuid] = Session{}
 
 	// Write a JSON containg the welcome message and the generated UUID
-
-	writeJSON(w, JSON {
+	writeJSON(w, JSON{
 		"uuid":    uuid,
-		"message": message,
+		"message": WelcomeMessage,
 	})
-	// fmt.Fprintln(w, message)
 }
 
 func handleChat(w http.ResponseWriter, r *http.Request) {
@@ -300,14 +124,14 @@ func handleChat(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	//Make sure a UUID exists in the Authorization header
+	// Make sure a UUID exists in the Authorization header
 	uuid := r.Header.Get("Authorization")
 	if uuid == "" {
 		http.Error(w, "Missing or empty Authorization header.", http.StatusUnauthorized)
 		return
 	}
 
-	//Make sure a session exists for the extracted UUID
+	// Make sure a session exists for the extracted UUID
 	session, sessionFound := sessions[uuid]
 	if !sessionFound {
 		http.Error(w, fmt.Sprintf("No session found for: %v.", uuid), http.StatusUnauthorized)
@@ -337,7 +161,7 @@ func handleChat(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Write a JSON containg the processed response
-	writeJSON(w, JSON {
+	writeJSON(w, JSON{
 		"message": message,
 	})
 }
@@ -360,10 +184,8 @@ func Engage(addr string) error {
 	// HandleFuncs
 	mux := http.NewServeMux()
 	mux.HandleFunc("/welcome", withLog(handleWelcome))
-	mux.HandleFunc("/chat", withLog(chat))
+	mux.HandleFunc("/chat", withLog(handleChat))
 	mux.HandleFunc("/", withLog(handle))
-
-
 
 	// Start the server
 	return http.ListenAndServe(addr, cors.CORS(mux))

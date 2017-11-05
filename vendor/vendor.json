@@ -9,18 +9,6 @@
 			"revisionTime": "2017-11-01T19:42:33Z"
 		},
 		{
-			"checksumSHA1": "nYmZQ6nxjskefeKXrCzQ4Wjat24=",
-			"path": "github.com/NourhanKhaled/chatbot-sample",
-			"revision": "b7e61d92f6ed440c5bbf48df117d9ba154d5d618",
-			"revisionTime": "2017-11-03T16:00:02Z"
-		},
-		{
-			"checksumSHA1": "nPjiPvpQH/U9GFYhmaXfN/3ps2E=",
-			"path": "github.com/NourhanKhaled/chatbot-sample/tasklistAPI",
-			"revision": "b7e61d92f6ed440c5bbf48df117d9ba154d5d618",
-			"revisionTime": "2017-11-03T16:00:02Z"
-		},
-		{
 			"checksumSHA1": "66FySld60ai7A8X83tqwih+Iguc=",
 			"path": "github.com/heppu/simple-cors",
 			"revision": "543cdec07e0c196abd48c5d966c0a0684cc47308",

@@ -51,7 +51,7 @@ func chatbotProcess(session chatbot.Session, message string) (string, error) {
 			return "", err
 		}
 		return message, nil
-	}	else if key == "view" {
+	}	else if key == "view" && len(s) == 1{
 		message, err := tasklistAPI.GetTasks()
 		if err != nil {
 			return "", err

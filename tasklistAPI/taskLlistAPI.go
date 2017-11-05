@@ -117,6 +117,10 @@ func CreateTask(title string, notes string, due string) (string, error) {
   if err != nil {
     return "", fmt.Errorf("wrong date format")
   }
+  now :=time.Now()
+  if date.Before(now) && !(date.Day()==now.Day() && date.Month()==now.Month() && date.Year()==now.Year()){
+    return "",fmt.Errorf("Invalid date")
+  }
 
   newformat := date.Format("2006-01-02T15:04:05Z")
 	task, err := taskapi.Tasks.Insert(tasklistId, &tasks.Task{
@@ -199,7 +203,11 @@ func UpdateTask(taskNumber string, title string, notes string, due string) (stri
     if err != nil {
       return "", fmt.Errorf("wrong date format")
     }
-
+    now :=time.Now()
+    fmt.Println((date.Day()==now.Day() && date.Month()==now.Month() && date.Year()==now.Year()))
+    if date.Before(now) && !(date.Day()==now.Day() && date.Month()==now.Month() && date.Year()==now.Year()){
+      return "",fmt.Errorf("Invalid date")
+    }
     newformat := date.Format("2006-01-02T15:04:05Z")
     updatedDue = newformat
   }

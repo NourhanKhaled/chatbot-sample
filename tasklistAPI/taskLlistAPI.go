@@ -286,11 +286,18 @@ func PostCode(token string) (string, error) {
     return "",err
   }
   client = config.Client(ctx, tok)
-  welcomeMessage := "Welcome, you are now logged in. \n To create a task type create: title: Your Title, notes: notes, due: Due date \n" +
-                    "To update a task type update: task number, field: value \n" +
-                    "To delete a task type delete: task number \n" +
-                    "To view all tasks type view"
-  return welcomeMessage,nil
+
+  name, err := username()
+  if err != nil {
+    return "", err
+  }
+
+  welcomeMessage := "Welcome " + name + ".</br> To create a task type create: title: `Your Title`, notes: `notes`, due: `due date (format dd/mm/yyyy hh:mm)` </br>" +
+                    "To update a task type update: `task number`, `field`: `value` </br>" +
+                    "To delete a task type delete: `task number` </br>" +
+                    "To view all tasks type view </br>" +
+                    "When a task is completed type completed: `task number`"
+  return welcomeMessage, nil
 }
 
 // writeJSON Writes the JSON equivilant for data into ResponseWriter w
@@ -351,6 +358,28 @@ func GetTaskList() (string,error) {
   fmt.Println("Task Lists:")
   if len(r.Items) > 0 {
     return r.Items[0].Id, nil
+  } else {
+    return "", fmt.Errorf("Task list not found")
+  }
+}
+
+func username() (string,error) {
+  srv, err := tasks.New(client)
+
+  if err != nil {
+    return "", fmt.Errorf("Unable to retrieve tasks Client %v!", err)
+  }
+
+  r, err := srv.Tasklists.List().MaxResults(1).Do()
+  if err != nil {
+    return "", fmt.Errorf("Unable to retrieve task lists %v!", err)
+  }
+
+  fmt.Println("Task Lists:")
+  if len(r.Items) > 0 {
+    title := r.Items[0].Title
+    title = title[:len(title) - 7]
+    return title, nil
   } else {
     return "", fmt.Errorf("Task list not found")
   }

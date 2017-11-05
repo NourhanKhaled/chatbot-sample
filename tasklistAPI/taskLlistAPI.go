@@ -124,7 +124,34 @@ func CreateTask(title string, notes string, due string) (string, error) {
 		Notes: notes,
 		Due:   newformat,
 	}).Do()
-  fmt.Printf("Got task, err: %#v, %v", task, err)
+
+  if err != nil {
+    return "", fmt.Errorf("Error in inserting the task %v", err)
+  }
+  // fmt.Printf("Got task, err: %#v, %v", task, err)
+
+  comp := "No"
+  if(task.Completed != nil) {
+    comp  = "Yes"
+  }
+
+  newformat1 := ""
+
+  if len(task.Due) > 0 {
+    date, _ := time.Parse("2006-01-02T15:04:05Z", task.Due)
+    if err != nil {
+      return "", err
+    }
+    newformat1 = date.Format("Mon 02/01/2006")
+  }
+
+  message := "Task inserted. </br>"
+  message += "Title: " + task.Title + "</br>"+
+    "Notes: " + task.Notes + "</br>" +
+    "Due: " + newformat1 + "</br>" +
+    "Completed: " + comp + "</br>"
+
+  return message, nil
 
   return "task inserted", nil
 
@@ -191,7 +218,30 @@ func UpdateTask(taskNumber string, title string, notes string, due string) (stri
   if err != nil {
     return "", fmt.Errorf("Error updating notes")
   }
-  return "Task updated", nil
+
+  comp := "No"
+  if(task.Completed != nil) {
+    comp  = "Yes"
+  }
+
+  newformat := ""
+
+  if len(task.Due) > 0 {
+    date, _ := time.Parse("2006-01-02T15:04:05Z", task.Due)
+    if err != nil {
+      return "", err
+    }
+    newformat = date.Format("Mon 02/01/2006")
+  }
+
+  message := "Task is updated </br>"
+  message += "Task Number: " + taskNumber + "</br>"+
+    "Title: " + task.Title + "</br>"+
+    "Notes: " + task.Notes + "</br>" +
+    "Due: " + newformat + "</br>" +
+    "Completed: " + comp + "</br>"
+
+  return message, nil
 
 }
 
@@ -261,8 +311,30 @@ func TaskCompleted(index string) (string, error) {
     fmt.Println(task)
     if err != nil{
       return "", fmt.Errorf("Error in updating task")
-    } else{
-      return "Task is updated",nil
+    } else {
+      comp := "No"
+      if(task.Completed != nil) {
+        comp  = "Yes"
+      }
+
+      newformat := ""
+
+      if len(task.Due) > 0 {
+        date, _ := time.Parse("2006-01-02T15:04:05Z", task.Due)
+        if err != nil {
+          return "", err
+        }
+        newformat = date.Format("Mon 02/01/2006")
+      }
+
+      message := "Task is updated </br>"
+      message += "Task Number: " + index + "</br>"+
+        "Title: " + task.Title + "</br>"+
+        "Notes: " + task.Notes + "</br>" +
+        "Due: " + newformat + "</br>" +
+        "Completed: " + comp + "</br>"
+
+      return message, nil
     }
 
 }

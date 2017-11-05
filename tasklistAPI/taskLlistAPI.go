@@ -13,7 +13,6 @@ import (
   "time"
   //"strings"
   "strconv"
-  "reflect"
 
   "golang.org/x/net/context"
   "golang.org/x/oauth2"
@@ -113,7 +112,7 @@ func CreateTask(title string, notes string, due string) (string, error) {
     return "", fmt.Errorf("Missing due date in body.")
   }
 
-  date, err := time.Parse("02/1/200615:04", due)
+  date, err := time.Parse("2/1/2006", due)
   fmt.Println(date)
   if err != nil {
     return "", fmt.Errorf("wrong date format")
@@ -168,7 +167,7 @@ func UpdateTask(taskNumber string, title string, notes string, due string) (stri
   }
 
   if len(due) != 0 {
-    date, err := time.Parse("06/1/200615:04", due)
+    date, err := time.Parse("2/1/2006", due)
     fmt.Println(date)
     if err != nil {
       return "", fmt.Errorf("wrong date format")
@@ -197,7 +196,7 @@ func UpdateTask(taskNumber string, title string, notes string, due string) (stri
 }
 
 
-func DeleteTask(index string) (string, error){
+func DeleteTask(index string) (string, error) {
     //index := strings.TrimPrefix(r.URL.Path, "/delete/")
     taskIndex, err := strconv.Atoi(index)
 
@@ -231,7 +230,7 @@ func DeleteTask(index string) (string, error){
     return "Task is deleted",nil
 
 }
-func TaskCompleted(index string) (string, error){
+func TaskCompleted(index string) (string, error) {
     //index := strings.TrimPrefix(r.URL.Path, "/delete/")
     taskIndex, err := strconv.Atoi(index)
 
@@ -292,7 +291,7 @@ func PostCode(token string) (string, error) {
     return "", err
   }
 
-  welcomeMessage := "Welcome " + name + ".</br> To create a task type create: title: `Your Title`, notes: `notes`, due: `due date (format dd/mm/yyyy hh:mm)` </br>" +
+  welcomeMessage := "Welcome " + name + ".</br> To create a task type create: title: `Your Title`, notes: `notes`, due: `due date (format dd/mm/yyyy)` </br>" +
                     "To update a task type update: `task number`, `field`: `value` </br>" +
                     "To delete a task type delete: `task number` </br>" +
                     "To view all tasks type view </br>" +
@@ -327,18 +326,25 @@ func GetTasks() (string,error) {
           comp  = "Yes"
         }
 
-        fmt.Println(reflect.TypeOf(i.Completed))
+        newformat := ""
+
+        if len(i.Due) > 0 {
+          date, _ := time.Parse("2006-01-02T15:04:05Z", i.Due)
+          if err != nil {
+            return "", err
+          }
+          newformat = date.Format("Mon 02/01/2006")
+        }
 
         message += "Task Number: " + t + "</br>"+
           "Title: " + i.Title + "</br>"+
-          "Updated: " + i.Updated + "</br>" +
           "Notes: " + i.Notes + "</br>" +
-          "Due: " + i.Due + "</br>" +
+          "Due: " + newformat + "</br>" +
           "Completed: " + comp + "</br></br>"
       }
-      return message,nil
+      return message, nil
     } else {
-      return "No tasks",nil
+      return "No tasks", nil
     }
 
 }

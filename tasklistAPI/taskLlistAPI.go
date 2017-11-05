@@ -13,6 +13,7 @@ import (
   "time"
   //"strings"
   "strconv"
+  "reflect"
 
   "golang.org/x/net/context"
   "golang.org/x/oauth2"
@@ -46,7 +47,7 @@ func SendAuthURL()string  {
 
   fmt.Println(authURL)
   return "Go to the following link in your browser then type the "+
-          "authorization code: " + authURL
+          "authorization code in the form token: `write code here` </br>" + authURL
 
 }
 
@@ -112,7 +113,7 @@ func CreateTask(title string, notes string, due string) (string, error) {
     return "", fmt.Errorf("Missing due date in body.")
   }
 
-  date, err := time.Parse("06/1/200615:04", due)
+  date, err := time.Parse("02/1/200615:04", due)
   fmt.Println(date)
   if err != nil {
     return "", fmt.Errorf("wrong date format")
@@ -255,9 +256,8 @@ func TaskCompleted(index string) (string, error){
     }
 
     taskId := taskarr.Items[taskIndex].Id
-    now := time.Now().Format("2006-01-02T15:04:05Z")
     task, err := srv.Tasks.Patch(tasklistId, taskId,&tasks.Task{
-      Completed: &now,
+      Status: "completed",
     }).Do()
     fmt.Println(task)
     if err != nil{
@@ -320,14 +320,14 @@ func GetTasks() (string,error) {
           comp  = "Yes"
         }
 
-        fmt.Println(i.Completed)
+        fmt.Println(reflect.TypeOf(i.Completed))
 
-        message += "Task Number: " + t + ",\n"+
-          "Title: " + i.Title + ",\n"+
-          "Updated: " + i.Updated + ",\n" +
-          "Notes: " + i.Notes + ",\n" +
-          "Due: " + i.Due + ",\n" +
-          "Completed: " + comp + "\n\n"
+        message += "Task Number: " + t + "</br>"+
+          "Title: " + i.Title + "</br>"+
+          "Updated: " + i.Updated + "</br>" +
+          "Notes: " + i.Notes + "</br>" +
+          "Due: " + i.Due + "</br>" +
+          "Completed: " + comp + "</br></br>"
       }
       return message,nil
     } else {

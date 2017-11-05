@@ -27,7 +27,7 @@ func chatbotProcess(session chatbot.Session, message string) (string, error) {
 	history = append(history, message)
 
 	s := strings.Split(message, " ")
-	key := s[0]
+	key := strings.ToLower(s[0])
 
 	if key == "token:" {
 		tok := s[1]
@@ -63,34 +63,37 @@ func chatbotProcess(session chatbot.Session, message string) (string, error) {
 		due := ""
 
 		for i := 1; i < len(s); i++ {
-			curr := s[i]
+			curr := strings.ToLower(s[i])
 
 			if curr == "title:" {
 				for j := i + 1; j < len(s); j++ {
 					curr1 := s[j]
-					if curr1 == "notes:" || curr1 == "due:" {
+					temp := strings.ToLower(curr1)
+					if temp == "notes:" || temp == "due:" {
 						i = j - 1
 						break
 					}
-					title += curr1+" "
+					title += curr1 + " "
 				}
 			}
 
 			if curr == "notes:" {
 				for j := i + 1; j < len(s); j++ {
 					curr1 := s[j]
-					if curr1 == "title:" || curr1 == "due:" {
+					temp := strings.ToLower(curr1)
+					if temp == "title:" || temp == "due:" {
 						i = j - 1
 						break
 					}
-					notes += curr1+" "
+					notes += curr1 + " "
 				}
 			}
 
 			if curr == "due:" {
 				for j := i + 1; j < len(s); j++ {
 					curr1 := s[j]
-					if curr1 == "notes:" || curr1 == "title:" {
+					temp := strings.ToLower(curr1)
+					if temp == "notes:" || temp == "title:" {
 						i = j - 1
 						break
 					}
@@ -116,7 +119,8 @@ func chatbotProcess(session chatbot.Session, message string) (string, error) {
 			if curr == "title:" {
 				for j := i + 1; j < len(s); j++ {
 					curr1 := s[j]
-					if curr1 == "notes:" || curr1 == "due:" {
+					temp := strings.ToLower(curr1)
+					if temp == "notes:" || temp == "due:" {
 						i = j - 1
 						break
 					}
@@ -127,7 +131,8 @@ func chatbotProcess(session chatbot.Session, message string) (string, error) {
 			if curr == "notes:" {
 				for j := i + 1; j < len(s); j++ {
 					curr1 := s[j]
-					if curr1 == "title:" || curr1 == "due:" {
+					temp := strings.ToLower(curr1)
+					if temp == "title:" || temp == "due:" {
 						i = j - 1
 						break
 					}
@@ -138,7 +143,8 @@ func chatbotProcess(session chatbot.Session, message string) (string, error) {
 			if curr == "due:" {
 				for j := i + 1; j < len(s); j++ {
 					curr1 := s[j]
-					if curr1 == "notes:" || curr1 == "title:" {
+					temp := strings.ToLower(curr1)
+					if temp == "notes:" || temp == "title:" {
 						i = j - 1
 						break
 					}

@@ -2,3 +2,6 @@
 /.vscode/
 /debug
 /tmp/
+/vendor/*/
+client_secret.json
+google_calendar_client_secret.json

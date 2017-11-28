@@ -29,29 +29,33 @@ func chatbotProcess(session chatbot.Session, message string) (string, error) {
 	s := strings.Split(message, " ")
 	key := strings.ToLower(s[0])
 
+	fmt.Println(message)
+
 	if key == "token:" {
-		tok := s[1]
-		session["token"] = tok
-		message, err := tasklistAPI.PostCode(tok)
+		accesstok := s[1]
+		refreshtok := s[2]
+		date := s[3]
+		session["token"] = accesstok
+		message, err := tasklistAPI.PostCode(accesstok, refreshtok, date)
 		if err != nil {
 			return "", err
 		}
 		return message, nil
-	}	else if key == "delete:" {
+	} else if key == "delete:" {
 		taskNumber := s[1]
 		message, err := tasklistAPI.DeleteTask(taskNumber)
 		if err != nil {
 			return "", err
 		}
 		return message, nil
-	}	else if key == "completed:" {
+	} else if key == "completed:" {
 		taskNumber := s[1]
 		message, err := tasklistAPI.TaskCompleted(taskNumber)
 		if err != nil {
 			return "", err
 		}
 		return message, nil
-	}	else if key == "view" && len(s) == 1{
+	} else if key == "view" && len(s) == 1 {
 		message, err := tasklistAPI.GetTasks()
 		if err != nil {
 			return "", err
@@ -160,10 +164,10 @@ func chatbotProcess(session chatbot.Session, message string) (string, error) {
 		return message, nil
 	} else {
 		message := "You have entered an invalid message.</br> To create a task type create: title: Your Title, notes: notes, due: Due date </br>" +
-	                    "To update a task type update: task number, field: value </br>" +
-	                    "To delete a task type delete: task number </br>" +
-	                    "To view all tasks type view </br>" +
-											"When a task is completed type completed: `task number`"
+			"To update a task type update: task number, field: value </br>" +
+			"To delete a task type delete: task number </br>" +
+			"To view all tasks type view </br>" +
+			"When a task is completed type completed: `task number`"
 		return message, nil
 	}
 

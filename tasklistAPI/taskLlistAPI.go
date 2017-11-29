@@ -147,11 +147,11 @@ func CreateTask(title string, notes string, due string) (string, error) {
 		newformat1 = date.Format("Mon 02/01/2006")
 	}
 
-	message := "Task inserted. </br>"
-	message += "Title: " + task.Title + "</br>" +
-		"Notes: " + task.Notes + "</br>" +
-		"Due: " + newformat1 + "</br>" +
-		"Completed: " + comp + "</br>"
+	message := "Task inserted. \n"
+	message += "Title: " + task.Title + "\n" +
+		"Notes: " + task.Notes + "\n" +
+		"Due: " + newformat1 + "\n" +
+		"Completed: " + comp + "\n"
 
 	return message, nil
 }
@@ -237,12 +237,12 @@ func UpdateTask(taskNumber string, title string, notes string, due string) (stri
 		newformat = date.Format("Mon 02/01/2006")
 	}
 
-	message := "Task is updated </br>"
-	message += "Task Number: " + taskNumber + "</br>" +
-		"Title: " + task.Title + "</br>" +
-		"Notes: " + task.Notes + "</br>" +
-		"Due: " + newformat + "</br>" +
-		"Completed: " + comp + "</br>"
+	message := "Task is updated \n"
+	message += "Task Number: " + taskNumber + "\n" +
+		"Title: " + task.Title + "\n" +
+		"Notes: " + task.Notes + "\n" +
+		"Due: " + newformat + "\n" +
+		"Completed: " + comp + "\n"
 
 	return message, nil
 
@@ -329,12 +329,12 @@ func TaskCompleted(index string) (string, error) {
 			newformat = date.Format("Mon 02/01/2006")
 		}
 
-		message := "Task is updated </br>"
-		message += "Task Number: " + index + "</br>" +
-			"Title: " + task.Title + "</br>" +
-			"Notes: " + task.Notes + "</br>" +
-			"Due: " + newformat + "</br>" +
-			"Completed: " + comp + "</br>"
+		message := "Task is updated \n"
+		message += "Task Number: " + index + "\n" +
+			"Title: " + task.Title + "\n" +
+			"Notes: " + task.Notes + "\n" +
+			"Due: " + newformat + "\n" +
+			"Completed: " + comp + "\n"
 
 		return message, nil
 	}
@@ -378,11 +378,7 @@ func PostCode(token string, refreshtoken string, date string) (string, error) {
 		return "", err
 	}
 
-	welcomeMessage := "Welcome " + name + ".</br> To create a task type create: title: `Your Title`, notes: `notes`, due: `due date (format dd/mm/yyyy)` </br>" +
-		"To update a task type update: `task number`, `field`: `value` </br>" +
-		"To delete a task type delete: `task number` </br>" +
-		"To view all tasks type view </br>" +
-		"When a task is completed type completed: `task number`"
+	welcomeMessage := "Welcome " + name + " to Todo Brownies.\n To create a brownie click here http://allrecipes.com/recipe/10549/best-brownies/  \n. But if you are super busy, super important and want to organize your tasks here you go."
 
 	fmt.Println(welcomeMessage)
 	return welcomeMessage, nil
@@ -425,11 +421,11 @@ func GetTasks() (string, error) {
 				newformat = date.Format("Mon 02/01/2006")
 			}
 
-			message += "Task Number: " + t + "</br>" +
-				"Title: " + i.Title + "</br>" +
-				"Notes: " + i.Notes + "</br>" +
-				"Due: " + newformat + "</br>" +
-				"Completed: " + comp + "</br></br>"
+			message += "Task Number: " + t + "\n" +
+				"Title: " + i.Title + "\n" +
+				"Notes: " + i.Notes + "\n" +
+				"Due: " + newformat + "\n" +
+				"Completed: " + comp + "\n\n"
 		}
 		return message, nil
 	} else {

@@ -287,7 +287,7 @@ func TaskCompleted(index string) (string, error) {
 	taskIndex, err := strconv.Atoi(index)
 
 	if err != nil {
-		return "Invalid task number.", fmt.Errorf("Invalid index")
+		return "Invalid task number.", nil
 	}
 
 	srv, err := tasks.New(client)
@@ -303,7 +303,7 @@ func TaskCompleted(index string) (string, error) {
 	taskarr, err := srv.Tasks.List(tasklistId).Do()
 
 	if len(taskarr.Items) < taskIndex {
-		return "Invalid task number.", fmt.Errorf("Invalid task number")
+		return "Invalid task number.", nil
 	}
 
 	taskId := taskarr.Items[taskIndex].Id
@@ -312,7 +312,7 @@ func TaskCompleted(index string) (string, error) {
 	}).Do()
 	fmt.Println(task)
 	if err != nil {
-		return "Error in updating task.", fmt.Errorf("Error in updating task")
+		return "Error in updating task.", nil
 	} else {
 		comp := "No"
 		if task.Completed != nil {
@@ -324,7 +324,7 @@ func TaskCompleted(index string) (string, error) {
 		if len(task.Due) > 0 {
 			date, _ := time.Parse("2006-01-02T15:04:05Z", task.Due)
 			if err != nil {
-				return "Oops! Something went wrong.", err
+				return "Oops! Something went wrong.", nil
 			}
 			newformat = date.Format("Mon 02/01/2006")
 		}

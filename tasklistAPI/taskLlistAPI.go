@@ -103,21 +103,21 @@ func CreateTask(title string, notes string, due string) (string, error) {
 
 	// Make sure a message key is defined in the body of the request
 	if len(title) == 0 {
-		return "", fmt.Errorf("Missing title in body.")
+		return "Missing title in body.", nil
 	}
 
 	if len(due) == 0 {
-		return "", fmt.Errorf("Missing due date in body.")
+		return "Missing due date in body.", nil
 	}
 
 	date, err := time.Parse("2/1/2006", due)
 	fmt.Println(date)
 	if err != nil {
-		return "", fmt.Errorf("wrong date format")
+		return "wrong date format", nil
 	}
 	now := time.Now()
 	if date.Before(now) && !(date.Day() == now.Day() && date.Month() == now.Month() && date.Year() == now.Year()) {
-		return "", fmt.Errorf("Invalid date")
+		return "Invalid date", nil
 	}
 
 	newformat := date.Format("2006-01-02T15:04:05Z")
@@ -128,7 +128,7 @@ func CreateTask(title string, notes string, due string) (string, error) {
 	}).Do()
 
 	if err != nil {
-		return "", fmt.Errorf("Error in inserting the task %v", err)
+		return "Error in inserting the task", nil
 	}
 	// fmt.Printf("Got task, err: %#v, %v", task, err)
 
@@ -173,13 +173,13 @@ func UpdateTask(taskNumber string, title string, notes string, due string) (stri
 	taskIndex, err := strconv.Atoi(taskNumber)
 
 	if err != nil {
-		return "", fmt.Errorf("Invalid index")
+		return "Invalid index", nil
 	}
 
 	tasksarr, err := taskapi.Tasks.List(tasklistId).Do()
 
 	if len(tasksarr.Items) < taskIndex {
-		return "", fmt.Errorf("Invalid task number")
+		return "Invalid task number", nil
 	}
 
 	taskId := tasksarr.Items[taskIndex].Id
@@ -196,7 +196,7 @@ func UpdateTask(taskNumber string, title string, notes string, due string) (stri
 		date, err := time.Parse("2/1/2006", due)
 		fmt.Println(date)
 		if err != nil {
-			return "", fmt.Errorf("wrong date format")
+			return "wrong date format", nil
 		}
 		now := time.Now()
 		fmt.Println((date.Day() == now.Day() && date.Month() == now.Month() && date.Year() == now.Year()))
@@ -219,7 +219,7 @@ func UpdateTask(taskNumber string, title string, notes string, due string) (stri
 
 	fmt.Printf("Got task, err: %#v, %v", task, err)
 	if err != nil {
-		return "", fmt.Errorf("Error updating notes")
+		return "Error in updating task", nil
 	}
 
 	comp := "No"
@@ -268,16 +268,15 @@ func DeleteTask(index string) (string, error) {
 	}
 	tasks, err := srv.Tasks.List(tasklistId).Do()
 
-	if len(tasks.Items) < taskIndex {
-		return "", fmt.Errorf("Invalid task number")
+	if len(tasks.Items) < taskIndex || len(tasks.Items) < 0 {
+		return "Invalid task number", nil
 	}
 
 	taskId := tasks.Items[taskIndex].Id
 	err = srv.Tasks.Delete(tasklistId, taskId).Do()
 
 	if err != nil {
-
-		return "", fmt.Errorf("Unable to delete task")
+		return "Unable to delete task", nil
 	}
 	return "Task is deleted", nil
 
@@ -395,6 +394,7 @@ func GetTasks() (string, error) {
 	if err != nil {
 		return "", err
 	}
+
 	srv, err := tasks.New(client)
 	tasks, err := srv.Tasks.List(tasklistId).Do()
 	if err != nil {

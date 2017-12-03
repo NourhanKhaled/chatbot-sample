@@ -19,6 +19,9 @@ func chatbotProcess(session chatbot.Session, message string) (string, error) {
 	if !historyFound {
 		session["history"] = []string{}
 	}
+	fmt.Println("SESSION")
+	fmt.Println(session)
+	fmt.Printf("%#v\n", session)
 
 	// Fetch the history from session and cast it to an array of strings
 	history, _ := session["history"].([]string)
@@ -33,17 +36,22 @@ func chatbotProcess(session chatbot.Session, message string) (string, error) {
 
 	if key == "token:" {
 		accesstok := s[1]
-		refreshtok := s[2]
-		date := s[3]
+		// refreshtok := s[2]
+		// date := s[3]
 		session["token"] = accesstok
-		message, err := tasklistAPI.PostCode(accesstok, refreshtok, date)
+		fmt.Println("TOKEN")
+		fmt.Println(session)
+		fmt.Printf("%#v\n", session)
+		message, err := tasklistAPI.PostCode(accesstok)
 		if err != nil {
 			return "", err
 		}
 		return message, nil
 	} else if key == "delete:" {
 		taskNumber := s[1]
-		message, err := tasklistAPI.DeleteTask(taskNumber)
+		fmt.Println("IN DELETE")
+		fmt.Printf("%#v\n", session)
+		message, err := tasklistAPI.DeleteTask(taskNumber, session["token"].(string))
 		if err != nil {
 			return "", err
 		}
@@ -56,7 +64,7 @@ func chatbotProcess(session chatbot.Session, message string) (string, error) {
 		}
 		return message, nil
 	} else if key == "view" && len(s) == 1 {
-		message, err := tasklistAPI.GetTasks()
+		message, err := tasklistAPI.GetTasks(session["token"].(string))
 		if err != nil {
 			return "", err
 		}

@@ -248,15 +248,28 @@ func UpdateTask(taskNumber string, title string, notes string, due string) (stri
 
 }
 
-func DeleteTask(index string) (string, error) {
+func DeleteTask(index string, token string) (string, error) {
 	//index := strings.TrimPrefix(r.URL.Path, "/delete/")
+	ctx := context.Background()
+	b, err := ioutil.ReadFile("client_secret.json")
+	if err != nil {
+		log.Fatalf("Unable to read client secret file: %v", err)
+	}
+	config, err := google.ConfigFromJSON(b, tasks.TasksScope)
+	if err != nil {
+		log.Fatalf("Unable to parse client secret file to config: %v", err)
+	}
+	tok := oauth2.Token{AccessToken: token}
+	fmt.Printf("%#v\n", tok)
+	client1 := config.Client(ctx, &tok)
+
 	taskIndex, err := strconv.Atoi(index)
 
 	if err != nil {
 		return "", fmt.Errorf("Invalid index")
 	}
 
-	srv, err := tasks.New(client)
+	srv, err := tasks.New(client1)
 	if err != nil {
 		log.Fatalf("Unable to create Tasks service: %v", err)
 	}
@@ -340,7 +353,8 @@ func TaskCompleted(index string) (string, error) {
 
 }
 
-func PostCode(token string, refreshtoken string, date string) (string, error) {
+// refreshtoken string, date string
+func PostCode(token string) (string, error) {
 	fmt.Println("in post code")
 	ctx := context.Background()
 	//
@@ -389,13 +403,27 @@ func writeJSON(w http.ResponseWriter, data JSON) {
 	json.NewEncoder(w).Encode(data)
 }
 
-func GetTasks() (string, error) {
-	tasklistId, err := GetTaskList()
+func GetTasks(token string) (string, error) {
+
+	ctx := context.Background()
+	b, err := ioutil.ReadFile("client_secret.json")
+	if err != nil {
+		log.Fatalf("Unable to read client secret file: %v", err)
+	}
+	config, err := google.ConfigFromJSON(b, tasks.TasksScope)
+	if err != nil {
+		log.Fatalf("Unable to parse client secret file to config: %v", err)
+	}
+	tok := oauth2.Token{AccessToken: token}
+	fmt.Printf("%#v\n", tok)
+	client1 := config.Client(ctx, &tok)
+
+	tasklistId, err := GetTaskList1(token)
 	if err != nil {
 		return "", err
 	}
 
-	srv, err := tasks.New(client)
+	srv, err := tasks.New(client1)
 	tasks, err := srv.Tasks.List(tasklistId).Do()
 	if err != nil {
 		return "", err
@@ -432,6 +460,39 @@ func GetTasks() (string, error) {
 		return "No tasks", nil
 	}
 
+}
+
+func GetTaskList1(token string) (string, error) {
+	ctx := context.Background()
+	b, err := ioutil.ReadFile("client_secret.json")
+	if err != nil {
+		log.Fatalf("Unable to read client secret file: %v", err)
+	}
+	config, err := google.ConfigFromJSON(b, tasks.TasksScope)
+	if err != nil {
+		log.Fatalf("Unable to parse client secret file to config: %v", err)
+	}
+	tok := oauth2.Token{AccessToken: token}
+	fmt.Printf("%#v\n", tok)
+	client1 := config.Client(ctx, &tok)
+
+	srv, err := tasks.New(client1)
+
+	if err != nil {
+		return "", fmt.Errorf("Unable to retrieve tasks Client %v!", err)
+	}
+
+	r, err := srv.Tasklists.List().MaxResults(1).Do()
+	if err != nil {
+		return "", fmt.Errorf("Unable to retrieve task lists %v!", err)
+	}
+
+	fmt.Println("Task Lists:")
+	if len(r.Items) > 0 {
+		return r.Items[0].Id, nil
+	} else {
+		return "", fmt.Errorf("Task list not found")
+	}
 }
 
 func GetTaskList() (string, error) {

@@ -268,7 +268,7 @@ func DeleteTask(index string) (string, error) {
 	}
 	tasks, err := srv.Tasks.List(tasklistId).Do()
 
-	if len(tasks.Items) < taskIndex || len(tasks.Items) < 0 {
+	if len(tasks.Items) < taskIndex || taskIndex < 0 {
 		return "Invalid task number", nil
 	}
 

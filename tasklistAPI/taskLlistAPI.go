@@ -26,7 +26,7 @@ type (
 	JSON map[string]interface{}
 )
 
-var client *http.Client
+//var client *http.Client
 
 // getTokenFromWeb uses Config to request a Token.
 // It returns the retrieved Token.
@@ -86,17 +86,18 @@ func saveToken(file string, token *oauth2.Token) {
 	json.NewEncoder(f).Encode(token)
 }
 
-func CreateTask(title string, notes string, due string) (string, error) {
+func CreateTask(title string, notes string, due string, token string) (string, error) {
 	fmt.Println("In create task")
 	fmt.Println(title)
 	fmt.Println(due)
 	fmt.Println(notes)
+	client := getClient(token)
 	taskapi, err := tasks.New(client)
 	if err != nil {
 		log.Fatalf("Unable to create Tasks service: %v", err)
 	}
 
-	tasklistId, err := GetTaskList()
+	tasklistId, err := GetTaskList(token)
 	if err != nil {
 		log.Fatalf("Unable to get tasklist: %v", err)
 	}
@@ -156,17 +157,18 @@ func CreateTask(title string, notes string, due string) (string, error) {
 	return message, nil
 }
 
-func UpdateTask(taskNumber string, title string, notes string, due string) (string, error) {
+func UpdateTask(taskNumber string, title string, notes string, due string, token string) (string, error) {
 	fmt.Println("In update task")
 	fmt.Println(title)
 	fmt.Println(due)
 	fmt.Println(notes)
+	client := getClient(token)
 	taskapi, err := tasks.New(client)
 	if err != nil {
 		log.Fatalf("Unable to update Tasks service: %v", err)
 	}
 
-	tasklistId, err := GetTaskList()
+	tasklistId, err := GetTaskList(token)
 	if err != nil {
 		log.Fatalf("Unable to get tasklist: %v", err)
 	}
@@ -250,18 +252,6 @@ func UpdateTask(taskNumber string, title string, notes string, due string) (stri
 
 func DeleteTask(index string, token string) (string, error) {
 	//index := strings.TrimPrefix(r.URL.Path, "/delete/")
-	ctx := context.Background()
-	b, err := ioutil.ReadFile("client_secret.json")
-	if err != nil {
-		log.Fatalf("Unable to read client secret file: %v", err)
-	}
-	config, err := google.ConfigFromJSON(b, tasks.TasksScope)
-	if err != nil {
-		log.Fatalf("Unable to parse client secret file to config: %v", err)
-	}
-	tok := oauth2.Token{AccessToken: token}
-	fmt.Printf("%#v\n", tok)
-	client1 := config.Client(ctx, &tok)
 
 	taskIndex, err := strconv.Atoi(index)
 
@@ -269,12 +259,14 @@ func DeleteTask(index string, token string) (string, error) {
 		return "", fmt.Errorf("Invalid index")
 	}
 
-	srv, err := tasks.New(client1)
+	client := getClient(token)
+
+	srv, err := tasks.New(client)
 	if err != nil {
 		log.Fatalf("Unable to create Tasks service: %v", err)
 	}
 
-	tasklistId, err := GetTaskList()
+	tasklistId, err := GetTaskList(token)
 
 	if err != nil {
 		log.Fatalf("Unable to get tasklist: %v", err)
@@ -294,7 +286,7 @@ func DeleteTask(index string, token string) (string, error) {
 	return "Task is deleted", nil
 
 }
-func TaskCompleted(index string) (string, error) {
+func TaskCompleted(index string, token string) (string, error) {
 	//index := strings.TrimPrefix(r.URL.Path, "/delete/")
 	taskIndex, err := strconv.Atoi(index)
 
@@ -302,12 +294,13 @@ func TaskCompleted(index string) (string, error) {
 		return "Invalid task number.", nil
 	}
 
+	client := getClient(token)
 	srv, err := tasks.New(client)
 	if err != nil {
 		log.Fatalf("Unable to create Tasks service: %v", err)
 	}
 
-	tasklistId, err := GetTaskList()
+	tasklistId, err := GetTaskList(token)
 
 	if err != nil {
 		log.Fatalf("Unable to get tasklist: %v", err)
@@ -356,36 +349,8 @@ func TaskCompleted(index string) (string, error) {
 // refreshtoken string, date string
 func PostCode(token string) (string, error) {
 	fmt.Println("in post code")
-	ctx := context.Background()
-	//
-	b, err := ioutil.ReadFile("client_secret.json")
-	if err != nil {
-		log.Fatalf("Unable to read client secret file: %v", err)
-	}
-	//
-	config, err := google.ConfigFromJSON(b, tasks.TasksScope)
-	if err != nil {
-		log.Fatalf("Unable to parse client secret file to config: %v", err)
-	}
 
-	// tok, err := config.Exchange(oauth2.NoContext, token)
-	// if err != nil {
-	//   return "",err
-	// }
-	// fmt.Println("token")
-	// yyyy-MM-dd'T'HH:mm:ss.SSSZ
-	// date1, err := time.Parse(time.RFC3339Nano, date)
-
-	// if err != nil {
-	// 	fmt.Println(err)
-	// 	return "", err
-	// }
-
-	tok := oauth2.Token{AccessToken: token}
-	fmt.Printf("%#v\n", tok)
-	client = config.Client(ctx, &tok)
-
-	name, err := username()
+	name, err := username(token)
 	if err != nil {
 		fmt.Println(err)
 		return "", err
@@ -404,26 +369,14 @@ func writeJSON(w http.ResponseWriter, data JSON) {
 }
 
 func GetTasks(token string) (string, error) {
+	client := getClient(token)
 
-	ctx := context.Background()
-	b, err := ioutil.ReadFile("client_secret.json")
-	if err != nil {
-		log.Fatalf("Unable to read client secret file: %v", err)
-	}
-	config, err := google.ConfigFromJSON(b, tasks.TasksScope)
-	if err != nil {
-		log.Fatalf("Unable to parse client secret file to config: %v", err)
-	}
-	tok := oauth2.Token{AccessToken: token}
-	fmt.Printf("%#v\n", tok)
-	client1 := config.Client(ctx, &tok)
-
-	tasklistId, err := GetTaskList1(token)
+	tasklistId, err := GetTaskList(token)
 	if err != nil {
 		return "", err
 	}
 
-	srv, err := tasks.New(client1)
+	srv, err := tasks.New(client)
 	tasks, err := srv.Tasks.List(tasklistId).Do()
 	if err != nil {
 		return "", err
@@ -462,7 +415,7 @@ func GetTasks(token string) (string, error) {
 
 }
 
-func GetTaskList1(token string) (string, error) {
+func getClient(token string) *http.Client {
 	ctx := context.Background()
 	b, err := ioutil.ReadFile("client_secret.json")
 	if err != nil {
@@ -474,7 +427,12 @@ func GetTaskList1(token string) (string, error) {
 	}
 	tok := oauth2.Token{AccessToken: token}
 	fmt.Printf("%#v\n", tok)
-	client1 := config.Client(ctx, &tok)
+
+	return config.Client(ctx, &tok)
+}
+
+func GetTaskList(token string) (string, error) {
+	client1 := getClient(token)
 
 	srv, err := tasks.New(client1)
 
@@ -495,27 +453,8 @@ func GetTaskList1(token string) (string, error) {
 	}
 }
 
-func GetTaskList() (string, error) {
-	srv, err := tasks.New(client)
-
-	if err != nil {
-		return "", fmt.Errorf("Unable to retrieve tasks Client %v!", err)
-	}
-
-	r, err := srv.Tasklists.List().MaxResults(1).Do()
-	if err != nil {
-		return "", fmt.Errorf("Unable to retrieve task lists %v!", err)
-	}
-
-	fmt.Println("Task Lists:")
-	if len(r.Items) > 0 {
-		return r.Items[0].Id, nil
-	} else {
-		return "", fmt.Errorf("Task list not found")
-	}
-}
-
-func username() (string, error) {
+func username(token string) (string, error) {
+	client := getClient(token)
 	srv, err := tasks.New(client)
 
 	if err != nil {

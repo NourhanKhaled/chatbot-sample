@@ -58,7 +58,7 @@ func chatbotProcess(session chatbot.Session, message string) (string, error) {
 		return message, nil
 	} else if key == "completed:" {
 		taskNumber := s[1]
-		message, err := tasklistAPI.TaskCompleted(taskNumber)
+		message, err := tasklistAPI.TaskCompleted(taskNumber, session["token"].(string))
 		if err != nil {
 			return "", err
 		}
@@ -114,7 +114,7 @@ func chatbotProcess(session chatbot.Session, message string) (string, error) {
 			}
 		}
 
-		message, err := tasklistAPI.CreateTask(title, notes, due)
+		message, err := tasklistAPI.CreateTask(title, notes, due, session["token"].(string))
 		if err != nil {
 			return "", err
 		}
@@ -165,7 +165,7 @@ func chatbotProcess(session chatbot.Session, message string) (string, error) {
 			}
 		}
 
-		message, err := tasklistAPI.UpdateTask(taskNumber, title, notes, due)
+		message, err := tasklistAPI.UpdateTask(taskNumber, title, notes, due, session["token"].(string))
 		if err != nil {
 			return "", err
 		}
@@ -174,20 +174,6 @@ func chatbotProcess(session chatbot.Session, message string) (string, error) {
 		message := "You have entered an invalid message."
 		return message, nil
 	}
-
-	// Form a sentence out of the history in the form Message 1, Message 2, and Message 3
-	l := len(history)
-	wordsForSentence := make([]string, l)
-	copy(wordsForSentence, history)
-	if l > 1 {
-		wordsForSentence[l-1] = "and " + wordsForSentence[l-1]
-	}
-	sentence := strings.Join(wordsForSentence, ", ")
-
-	// Save the updated history to the session
-	session["history"] = history
-
-	return fmt.Sprintf("So, you want %s! What else?", strings.ToLower(sentence)), nil
 }
 
 func main() {

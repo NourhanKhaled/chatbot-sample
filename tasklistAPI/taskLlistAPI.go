@@ -301,7 +301,7 @@ func TaskCompleted(index string) (string, error) {
 	}
 	taskarr, err := srv.Tasks.List(tasklistId).Do()
 
-	if len(taskarr.Items) < taskIndex {
+	if len(taskarr.Items) < taskIndex || taskIndex < 0 {
 		return "Invalid task number.", nil
 	}
 
@@ -377,7 +377,7 @@ func PostCode(token string, refreshtoken string, date string) (string, error) {
 		return "", err
 	}
 
-	welcomeMessage := "Welcome " + name + " to Todo Brownies.\n To create a brownie click here http://allrecipes.com/recipe/10549/best-brownies/  \n.But if you are super busy, super important and want to organize your tasks here you go."
+	welcomeMessage := "Welcome " + name + " to Todo Brownies.\n To create a brownie click here http://allrecipes.com/recipe/10549/best-brownies/  \n But if you are super busy, super important and want to organize your tasks here you go."
 
 	fmt.Println(welcomeMessage)
 	return welcomeMessage, nil

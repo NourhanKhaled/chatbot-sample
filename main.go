@@ -163,11 +163,7 @@ func chatbotProcess(session chatbot.Session, message string) (string, error) {
 		}
 		return message, nil
 	} else {
-		message := "You have entered an invalid message.\n To create a task type create: title: Your Title, notes: notes, due: Due date \n" +
-			"To update a task type update: task number, field: value \n" +
-			"To delete a task type delete: task number \n" +
-			"To view all tasks type view \n" +
-			"When a task is completed type completed: `task number`"
+		message := "You have entered an invalid message."
 		return message, nil
 	}
 

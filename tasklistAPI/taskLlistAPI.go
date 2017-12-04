@@ -103,7 +103,7 @@ func CreateTask(title string, notes string, due string, token string) (string, e
 	}
 
 	// Make sure a message key is defined in the body of the request
-	if len(title) == 0 {
+	if len(title) < 2 {
 		return "Missing title in body.", nil
 	}
 
@@ -256,7 +256,7 @@ func DeleteTask(index string, token string) (string, error) {
 	taskIndex, err := strconv.Atoi(index)
 
 	if err != nil {
-		return "", fmt.Errorf("Invalid index")
+		return "Invalid task number, press delete again", nil
 	}
 
 	client := getClient(token)
@@ -274,7 +274,7 @@ func DeleteTask(index string, token string) (string, error) {
 	tasks, err := srv.Tasks.List(tasklistId).Do()
 
 	if len(tasks.Items) < taskIndex || taskIndex < 0 {
-		return "Invalid task number", nil
+		return "Invalid task number, press delete again", nil
 	}
 
 	taskId := tasks.Items[taskIndex].Id
@@ -291,7 +291,7 @@ func TaskCompleted(index string, token string) (string, error) {
 	taskIndex, err := strconv.Atoi(index)
 
 	if err != nil {
-		return "Invalid task number.", nil
+		return "Invalid task number, press complete again", nil
 	}
 
 	client := getClient(token)
@@ -308,7 +308,7 @@ func TaskCompleted(index string, token string) (string, error) {
 	taskarr, err := srv.Tasks.List(tasklistId).Do()
 
 	if len(taskarr.Items) < taskIndex || taskIndex < 0 {
-		return "Invalid task number.", nil
+		return "Invalid task number, press complete again", nil
 	}
 
 	taskId := taskarr.Items[taskIndex].Id
